@@ -194,6 +194,10 @@ export default function App() {
   const [certFilter, setCertFilter] = useState<'all' | 'ai' | 'data'>('all');
   const [evFilter, setEvFilter] = useState<'all' | string>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [orbitMode, setOrbitMode] = useState(false);
+  const [telemetry, setTelemetry] = useState({ freq: 1800, latency: 18, bw: 40 });
+  const orbitModeRef = useRef(false);
+  const orbitRef = useRef({ isDragging: false, theta: 0.3, phi: 0.6, dragStart: { x: 0, y: 0 } });
 
   // Terminal CLI State
   const [terminalLogs, setTerminalLogs] = useState<
@@ -209,10 +213,23 @@ export default function App() {
   // Toast System
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2800);
+    setTimeout(() => { setToastMessage(null); }, 2800);
   };
+
+  // Sync orbitMode state → ref (accessible inside Three.js closure)
+  useEffect(() => { orbitModeRef.current = orbitMode; }, [orbitMode]);
+
+  // Telemetry HUD ticker
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTelemetry({
+        freq: Math.round(700 + Math.random() * 2100),
+        latency: Math.round(8 + Math.random() * 34),
+        bw: Math.round(10 + Math.random() * 90),
+      });
+    }, 1400);
+    return () => clearInterval(id);
+  }, []);
 
   // Sound FX System
   const playCyberSound = (type: string = 'click') => {
@@ -253,179 +270,270 @@ export default function App() {
     triggerToast(`✓ คัดลอกอีเมลเรียบร้อยแล้ว: ${email}`);
   };
 
-  // Three.js 3D Engine Setup
+  // Three.js 3D Engine — Interactive Cursor + Tower + Orbs
   useEffect(() => {
     if (!canvasRef.current) return;
-
     const canvas = canvasRef.current;
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance',
-    });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      55,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 2, 24);
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0x172033, 1.5);
-    scene.add(ambientLight);
-
+    scene.add(new THREE.AmbientLight(0x172033, 1.5));
     const dirLight = new THREE.DirectionalLight(0x00f0ff, 1.5);
     dirLight.position.set(-8, 12, 10);
     scene.add(dirLight);
-
     const pointLight = new THREE.PointLight(0xff007a, 2.5, 70);
     pointLight.position.set(11, 9, 5);
     scene.add(pointLight);
 
-    // 1. Procedural 5G Cell Tower Assembly
+    // ── TOWER ──────────────────────────────────────────────────
     const towerGroup = new THREE.Group();
 
-    const trunkGeo = new THREE.CylinderGeometry(0.12, 0.35, 13, 8);
-    const trunkMat = new THREE.MeshStandardMaterial({
-      color: 0x26394a,
-      metalness: 0.7,
-      roughness: 0.35,
-      wireframe: true,
-    });
-    const trunkMesh = new THREE.Mesh(trunkGeo, trunkMat);
+    // Lattice trunk
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x26394a, metalness: 0.7, roughness: 0.35, wireframe: true });
+    const trunkMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.35, 13, 8), trunkMat);
     trunkMesh.position.y = 4;
     towerGroup.add(trunkMesh);
 
-    // Antennas
-    [0, 120, 240].forEach((angle) => {
-      const rad = (angle * Math.PI) / 180;
-      const antennaGeo = new THREE.BoxGeometry(0.35, 2.4, 0.16);
-      const antennaMat = new THREE.MeshStandardMaterial({
-        color: 0x00f0ff,
-        emissive: 0x00f0ff,
-        emissiveIntensity: 0.95,
-      });
-      const antennaMesh = new THREE.Mesh(antennaGeo, antennaMat);
-      antennaMesh.position.set(Math.sin(rad) * 0.8, 10.5, Math.cos(rad) * 0.8);
-      antennaMesh.rotation.y = -rad;
-      towerGroup.add(antennaMesh);
+    // Cross-arm struts
+    [3, 6, 9].forEach(y => {
+      const strutMat = new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.8, roughness: 0.3, wireframe: true });
+      const s = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 0.1), strutMat);
+      s.position.y = y - 2.5;
+      towerGroup.add(s);
     });
 
-    // Beacon Light
-    const beaconGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    // Massive MIMO AAU panel
+    const mimoMat = new THREE.MeshStandardMaterial({ color: 0x001122, emissive: 0x00f0ff, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 });
+    const mimoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.8, 0.08), mimoMat);
+    mimoMesh.position.set(0.5, 8, 0.4);
+    towerGroup.add(mimoMesh);
+
+    // Microwave dish
+    const dishMat = new THREE.MeshStandardMaterial({ color: 0x446677, metalness: 0.85, roughness: 0.2, side: THREE.DoubleSide });
+    const dishMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.01, 0.3, 16, 1, true), dishMat);
+    dishMesh.position.set(-0.8, 7.5, 0);
+    dishMesh.rotation.z = Math.PI / 2;
+    towerGroup.add(dishMesh);
+
+    // Antennas (3 × 120°)
+    [0, 120, 240].forEach(angle => {
+      const rad = (angle * Math.PI) / 180;
+      const mat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 0.95 });
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.35, 2.4, 0.16), mat);
+      m.position.set(Math.sin(rad) * 0.8, 10.5, Math.cos(rad) * 0.8);
+      m.rotation.y = -rad;
+      towerGroup.add(m);
+    });
+
+    // Beacon + aviation pulse light
     const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff007a });
-    const beaconMesh = new THREE.Mesh(beaconGeo, beaconMat);
+    const beaconMesh = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), beaconMat);
     beaconMesh.position.y = 12;
     towerGroup.add(beaconMesh);
+    const aviationLight = new THREE.PointLight(0xff2244, 0, 8);
+    aviationLight.position.y = 12;
+    towerGroup.add(aviationLight);
 
     // Base
-    const baseGeo = new THREE.CylinderGeometry(1.4, 1.8, 0.5, 8);
-    const baseMat = new THREE.MeshStandardMaterial({
-      color: 0x111820,
-      metalness: 0.5,
-      roughness: 0.5,
-    });
-    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-    baseMesh.position.y = -2.6;
-    towerGroup.add(baseMesh);
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x111820, metalness: 0.5, roughness: 0.5 });
+    towerGroup.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.8, 0.5, 8), baseMat), { position: new THREE.Vector3(0, -2.6, 0) }));
 
     towerGroup.position.set(9, -7, -5);
     towerGroup.rotation.y = -Math.PI / 6;
     scene.add(towerGroup);
 
-    // 2. Full-Screen Radio Waves
+    const TOWER_TOP = new THREE.Vector3(9, 5.7, -5);
+
+    // ── ORBITING DATA ORBS ────────────────────────────────────
+    const orbsGroup = new THREE.Group();
+    orbsGroup.position.copy(TOWER_TOP);
+    const ORB_COLORS = [0x00f0ff, 0x00ff88, 0x8b5cf6, 0xff007a, 0x00f0ff];
+    const orbData: Array<{ mesh: THREE.Mesh; light: THREE.PointLight; radius: number; speed: number; tilt: number; phase: number; emissiveDecay: number }> = [];
+    for (let i = 0; i < 5; i++) {
+      const mat = new THREE.MeshStandardMaterial({ color: ORB_COLORS[i], emissive: ORB_COLORS[i], emissiveIntensity: 0.5, metalness: 0.8, roughness: 0.2 });
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), mat);
+      const light = new THREE.PointLight(ORB_COLORS[i], 0.4, 4);
+      mesh.add(light);
+      orbsGroup.add(mesh);
+      orbData.push({ mesh, light, radius: 3.5 + i * 0.6, speed: 0.3 + i * 0.1, tilt: (i * 25 * Math.PI) / 180, phase: (i * Math.PI * 2) / 5, emissiveDecay: 0 });
+    }
+    scene.add(orbsGroup);
+
+    // ── CURSOR SIGNAL RINGS (pool of 14) ─────────────────────
+    const cursorRings: Array<{ mesh: THREE.Mesh; active: boolean; progress: number; position: THREE.Vector3 }> = [];
+    for (let i = 0; i < 14; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x00f0ff : 0x00ff88, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
+      const mesh = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.02, 64), mat);
+      mesh.visible = false;
+      scene.add(mesh);
+      cursorRings.push({ mesh, active: false, progress: 1, position: new THREE.Vector3() });
+    }
+    let ringEmitCounter = 0;
+    const emitCursorRing = (pos: THREE.Vector3) => {
+      const ring = cursorRings.find(r => !r.active || r.progress >= 0.95);
+      if (!ring) return;
+      ring.active = true; ring.progress = 0;
+      ring.position.copy(pos);
+      ring.mesh.position.copy(pos);
+      ring.mesh.lookAt(camera.position);
+      ring.mesh.visible = true;
+      ring.mesh.scale.setScalar(0.1);
+      (ring.mesh.material as THREE.MeshBasicMaterial).opacity = 0.9;
+    };
+
+    // ── BEAMFORMING LASER (cursor → tower top) ────────────────
+    const laserPoints = [new THREE.Vector3(), TOWER_TOP.clone()];
+    const laserGeo = new THREE.BufferGeometry().setFromPoints(laserPoints);
+    const laserLine = new THREE.Line(laserGeo, new THREE.LineBasicMaterial({ color: 0xff007a, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
+    laserLine.visible = false;
+    scene.add(laserLine);
+
+    // Secondary beams to 2 nearest orbs
+    const secLaserLines = Array.from({ length: 2 }, () => {
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+      const l = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }));
+      l.visible = false;
+      scene.add(l);
+      return l;
+    });
+
+    // ── TOWER WAVE RINGS ──────────────────────────────────────
     const wavesGroup = new THREE.Group();
     wavesGroup.position.set(9, 3.7, -5);
     wavesGroup.rotation.x = Math.PI / 2.4;
-
     const waveRings: Array<{ mesh: THREE.Mesh; phase: number }> = [];
     for (let i = 0; i < 6; i++) {
-      const ringGeo = new THREE.RingGeometry(0.95, 1.02, 96);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? 0x00f0ff : 0x00ff88,
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.DoubleSide,
-      });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      wavesGroup.add(ringMesh);
-      waveRings.push({ mesh: ringMesh, phase: i * 0.15 });
+      const mat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x00f0ff : 0x00ff88, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+      const mesh = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.02, 96), mat);
+      wavesGroup.add(mesh);
+      waveRings.push({ mesh, phase: i * 0.15 });
     }
     scene.add(wavesGroup);
 
-    // 3. Particles
+    // ── BACKGROUND PARTICLES ──────────────────────────────────
     const pCount = highPerf ? 1000 : 350;
-    const pos = new Float32Array(pCount * 3);
-    const col = new Float32Array(pCount * 3);
-    const palette = [
-      new THREE.Color(0x00f0ff),
-      new THREE.Color(0x8b5cf6),
-      new THREE.Color(0x00ff88),
-      new THREE.Color(0xff007a),
-    ];
-
+    const pPos = new Float32Array(pCount * 3);
+    const pCol = new Float32Array(pCount * 3);
+    const palette = [new THREE.Color(0x00f0ff), new THREE.Color(0x8b5cf6), new THREE.Color(0x00ff88), new THREE.Color(0xff007a)];
     for (let i = 0; i < pCount; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 70;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 45;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
-
-      const color = palette[Math.floor(Math.random() * palette.length)];
-      col[i * 3] = color.r;
-      col[i * 3 + 1] = color.g;
-      col[i * 3 + 2] = color.b;
+      pPos[i * 3] = (Math.random() - 0.5) * 70; pPos[i * 3 + 1] = (Math.random() - 0.5) * 45; pPos[i * 3 + 2] = (Math.random() - 0.5) * 50;
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      pCol[i * 3] = c.r; pCol[i * 3 + 1] = c.g; pCol[i * 3 + 2] = c.b;
     }
-
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    particleGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-
-    const particleMat = new THREE.PointsMaterial({
-      size: 0.13,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    const particlePoints = new THREE.Points(particleGeo, particleMat);
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+    const particlePoints = new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 0.13, vertexColors: true, transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending, depthWrite: false }));
     scene.add(particlePoints);
 
-    // 4. RF Signal Spectrum Grid
+    // ── RF GRID MESH ──────────────────────────────────────────
     const gridPlaneGeo = new THREE.PlaneGeometry(70, 45, 56, 36);
-    const gridPlaneMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.14,
-    });
-    const gridPlaneMesh = new THREE.Mesh(gridPlaneGeo, gridPlaneMat);
+    const gridPlaneMesh = new THREE.Mesh(gridPlaneGeo, new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.14 }));
     gridPlaneMesh.rotation.x = -Math.PI / 2;
     gridPlaneMesh.position.y = -10;
     scene.add(gridPlaneMesh);
 
-    let mouseX = 0;
-    let mouseY = 0;
+    // ── CLICK SHOCKWAVE POOL ──────────────────────────────────
+    const shockwaves: Array<{ mesh: THREE.Mesh; active: boolean; progress: number }> = [];
+    for (let i = 0; i < 3; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+      const mesh = new THREE.Mesh(new THREE.TorusGeometry(1, 0.05, 8, 64), mat);
+      mesh.visible = false;
+      scene.add(mesh);
+      shockwaves.push({ mesh, active: false, progress: 1 });
+    }
+
+    // Burst particle pool
+    const BURST_COUNT = 24;
+    const burstParticles: Array<{ mesh: THREE.Mesh; velocity: THREE.Vector3; active: boolean; life: number }> = [];
+    for (let i = 0; i < BURST_COUNT; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x00ff88 : 0x00f0ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), mat);
+      mesh.visible = false;
+      scene.add(mesh);
+      burstParticles.push({ mesh, velocity: new THREE.Vector3(), active: false, life: 0 });
+    }
+
+    // ── INPUT TRACKING ────────────────────────────────────────
+    const raycaster = new THREE.Raycaster();
+    const virtualPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 5);
+    let mouseX = 0, mouseY = 0;
+    let cursor3D = new THREE.Vector3();
+    let hasCursor = false;
+
     const handlePointerMove = (e: PointerEvent) => {
       mouseX = e.clientX / window.innerWidth - 0.5;
       mouseY = e.clientY / window.innerHeight - 0.5;
-    };
-    window.addEventListener('pointermove', handlePointerMove);
+      const ndc = new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      raycaster.ray.intersectPlane(virtualPlane, cursor3D);
+      hasCursor = true;
 
-    const handleResize = () => {
+      // Emit signal ring every 5 frames
+      ringEmitCounter++;
+      if (ringEmitCounter % 5 === 0) emitCursorRing(cursor3D.clone());
+
+      // Update primary laser
+      laserLine.visible = true;
+      const lp = laserLine.geometry.attributes.position as THREE.BufferAttribute;
+      lp.setXYZ(0, cursor3D.x, cursor3D.y, cursor3D.z);
+      lp.setXYZ(1, TOWER_TOP.x, TOWER_TOP.y, TOWER_TOP.z);
+      lp.needsUpdate = true;
+
+      // Orbit drag
+      if (orbitModeRef.current && orbitRef.current.isDragging) {
+        const dx = (e.clientX - orbitRef.current.dragStart.x) * 0.005;
+        const dy = (e.clientY - orbitRef.current.dragStart.y) * 0.005;
+        orbitRef.current.theta += dx;
+        orbitRef.current.phi = Math.max(0.1, Math.min(1.4, orbitRef.current.phi + dy));
+        orbitRef.current.dragStart = { x: e.clientX, y: e.clientY };
+      }
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      orbitRef.current.isDragging = true;
+      orbitRef.current.dragStart = { x: e.clientX, y: e.clientY };
+      if (!hasCursor) return;
+
+      // Shockwave
+      const sw = shockwaves.find(s => !s.active || s.progress >= 0.95);
+      if (sw) {
+        sw.active = true; sw.progress = 0;
+        sw.mesh.position.copy(cursor3D);
+        sw.mesh.lookAt(camera.position);
+        sw.mesh.visible = true;
+      }
+      // Burst particles
+      burstParticles.forEach((bp, i) => {
+        bp.mesh.position.copy(cursor3D);
+        const angle = (i / BURST_COUNT) * Math.PI * 2;
+        const elev = (Math.random() - 0.5) * Math.PI;
+        const spd = 1 + Math.random() * 1.5;
+        bp.velocity.set(Math.cos(angle) * Math.cos(elev) * spd, Math.sin(elev) * spd, Math.sin(angle) * Math.cos(elev) * spd);
+        bp.active = true; bp.life = 0; bp.mesh.visible = true;
+        (bp.mesh.material as THREE.MeshBasicMaterial).opacity = 1;
+      });
+    };
+
+    const handlePointerUp = () => { orbitRef.current.isDragging = false; };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    };
-    window.addEventListener('resize', handleResize);
+    });
 
+    // ── ANIMATION LOOP ────────────────────────────────────────
     const clock = new THREE.Clock();
     let animId: number;
 
@@ -433,37 +541,126 @@ export default function App() {
       animId = requestAnimationFrame(animate3D);
       const t = clock.getElapsedTime();
 
-      camera.position.x += (mouseX * 3 - camera.position.x) * 0.025;
-      camera.position.y += (-mouseY * 2 + 2 - camera.position.y) * 0.025;
-      camera.lookAt(0, 1.5, 0);
-
-      if (particlePoints) {
-        particlePoints.rotation.y = t * 0.018;
-        particlePoints.rotation.x = Math.sin(t * 0.12) * 0.04;
+      // Camera: orbit or parallax follow
+      if (orbitModeRef.current) {
+        const r = 24;
+        camera.position.set(
+          r * Math.sin(orbitRef.current.phi) * Math.sin(orbitRef.current.theta),
+          r * Math.cos(orbitRef.current.phi) + 2,
+          r * Math.sin(orbitRef.current.phi) * Math.cos(orbitRef.current.theta)
+        );
+        camera.lookAt(TOWER_TOP);
+      } else {
+        camera.position.x += (mouseX * 3 - camera.position.x) * 0.025;
+        camera.position.y += (-mouseY * 2 + 2 - camera.position.y) * 0.025;
+        camera.lookAt(0, 1.5, 0);
       }
 
+      // Background particles
+      particlePoints.rotation.y = t * 0.018;
+      particlePoints.rotation.x = Math.sin(t * 0.12) * 0.04;
+
+      // Tower wave rings
       waveRings.forEach(({ mesh, phase }) => {
-        const progress = (t * 0.34 + phase) % 1;
-        const scale = 0.4 + progress * 10;
-        mesh.scale.setScalar(scale);
-        (mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(
-          0,
-          0.72 * (1 - progress)
-        );
+        const p = (t * 0.34 + phase) % 1;
+        mesh.scale.setScalar(0.4 + p * 10);
+        (mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.72 * (1 - p));
       });
 
-      if (gridPlaneGeo) {
-        const positions = gridPlaneGeo.attributes.position;
-        for (let i = 0; i < positions.count; i++) {
-          const x = positions.getX(i);
-          const y = positions.getY(i);
-          const z =
-            Math.sin(x * 0.23 + t * 1.2) * 0.7 +
-            Math.cos(y * 0.28 + t * 0.9) * 0.45;
-          positions.setZ(i, z);
+      // Aviation beacon pulse
+      const blink = Math.sin(t * 3);
+      aviationLight.intensity = (blink + 1) * 1.5;
+      beaconMat.color.setHex(blink > 0 ? 0xff2244 : 0x330011);
+
+      // Orbiting data orbs
+      orbData.forEach(orb => {
+        const angle = t * orb.speed + orb.phase;
+        orb.mesh.position.set(
+          Math.cos(angle) * orb.radius * Math.cos(orb.tilt),
+          Math.sin(angle * 0.7) * orb.radius * 0.5,
+          Math.sin(angle) * orb.radius * Math.cos(orb.tilt)
+        );
+        // World position = orbsGroup.position + orb.mesh.position
+        const wx = orb.mesh.position.x + TOWER_TOP.x;
+        const wy = orb.mesh.position.y + TOWER_TOP.y;
+        const wz = orb.mesh.position.z + TOWER_TOP.z;
+        // Check signal ring hits
+        cursorRings.forEach(ring => {
+          if (ring.active && ring.progress < 0.8) {
+            const d = Math.sqrt((ring.position.x - wx) ** 2 + (ring.position.y - wy) ** 2 + (ring.position.z - wz) ** 2);
+            if (d < ring.mesh.scale.x * 1.2) orb.emissiveDecay = 1;
+          }
+        });
+        if (orb.emissiveDecay > 0) {
+          (orb.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.5 + orb.emissiveDecay * 2.5;
+          orb.light.intensity = 0.4 + orb.emissiveDecay * 3;
+          orb.emissiveDecay = Math.max(0, orb.emissiveDecay - 0.02);
         }
-        positions.needsUpdate = true;
+      });
+
+      // Secondary laser beams to 2 nearest orbs
+      if (hasCursor) {
+        const orbWorld = orbData.map(orb => ({
+          x: orb.mesh.position.x + TOWER_TOP.x,
+          y: orb.mesh.position.y + TOWER_TOP.y,
+          z: orb.mesh.position.z + TOWER_TOP.z,
+        })).sort((a, b) => {
+          const da = (a.x - cursor3D.x) ** 2 + (a.y - cursor3D.y) ** 2 + (a.z - cursor3D.z) ** 2;
+          const db = (b.x - cursor3D.x) ** 2 + (b.y - cursor3D.y) ** 2 + (b.z - cursor3D.z) ** 2;
+          return da - db;
+        });
+        secLaserLines.forEach((line, i) => {
+          if (!orbWorld[i]) return;
+          line.visible = true;
+          const sp = line.geometry.attributes.position as THREE.BufferAttribute;
+          sp.setXYZ(0, cursor3D.x, cursor3D.y, cursor3D.z);
+          sp.setXYZ(1, orbWorld[i].x, orbWorld[i].y, orbWorld[i].z);
+          sp.needsUpdate = true;
+          (line.material as THREE.LineBasicMaterial).opacity = 0.28 + Math.sin(t * 5 + i) * 0.1;
+        });
       }
+
+      // RF grid ripple — cursor displacement
+      const gp = gridPlaneGeo.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < gp.count; i++) {
+        const gx = gp.getX(i), gy = gp.getY(i);
+        const base = Math.sin(gx * 0.23 + t * 1.2) * 0.7 + Math.cos(gy * 0.28 + t * 0.9) * 0.45;
+        const cx = cursor3D.x * 0.5, cy = cursor3D.y * 0.3;
+        const dist2 = (gx - cx) ** 2 + (gy - cy) ** 2;
+        gp.setZ(i, base + (hasCursor ? 2.5 * Math.exp(-dist2 / 20) : 0));
+      }
+      gp.needsUpdate = true;
+
+      // Cursor signal rings lifecycle
+      cursorRings.forEach(ring => {
+        if (!ring.active) return;
+        ring.progress += 0.018;
+        ring.mesh.scale.setScalar(0.1 + ring.progress * 5.5);
+        (ring.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.85 * (1 - ring.progress));
+        if (ring.progress >= 1) { ring.active = false; ring.mesh.visible = false; }
+      });
+
+      // Laser flicker
+      if (laserLine.visible) (laserLine.material as THREE.LineBasicMaterial).opacity = 0.5 + Math.sin(t * 12) * 0.18;
+
+      // Shockwaves
+      shockwaves.forEach(sw => {
+        if (!sw.active) return;
+        sw.progress += 0.028;
+        sw.mesh.scale.setScalar(0.5 + sw.progress * 8);
+        (sw.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.9 * (1 - sw.progress));
+        if (sw.progress >= 1) { sw.active = false; sw.mesh.visible = false; }
+      });
+
+      // Burst particles
+      burstParticles.forEach(bp => {
+        if (!bp.active) return;
+        bp.life += 0.022;
+        bp.mesh.position.addScaledVector(bp.velocity, 0.055);
+        bp.velocity.y -= 0.006;
+        (bp.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - bp.life);
+        if (bp.life >= 1) { bp.active = false; bp.mesh.visible = false; }
+      });
 
       renderer.render(scene, camera);
     };
@@ -473,10 +670,12 @@ export default function App() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointerup', handlePointerUp);
       renderer.dispose();
     };
   }, [highPerf]);
+
 
   // Terminal CLI Helper
   const runTerminalCmd = (cmdStr: string) => {
@@ -549,8 +748,9 @@ export default function App() {
               onClick={() => playCyberSound('click')}
               className="flex items-center gap-3.5 group"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#00F0FF]/20 border border-[#00F0FF]/60 flex items-center justify-center text-[#00F0FF] group-hover:bg-[#00F0FF] group-hover:text-black transition-all shadow-[0_0_20px_rgba(0,240,255,0.3)]">
-                <Radio className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#00F0FF]/60 shadow-[0_0_20px_rgba(0,240,255,0.3)] group-hover:shadow-[0_0_30px_rgba(0,240,255,0.6)] transition-all flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/cw-icon.jpg" alt="CW Logo" className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="font-display font-bold text-sm tracking-wide text-white group-hover:text-[#00F0FF] transition-colors flex items-center gap-2">
@@ -617,24 +817,27 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
+                  setOrbitMode(!orbitMode);
+                  triggerToast(orbitMode ? '🎯 โหมด Parallax Follow' : '🔄 โหมด 360° Free Orbit — ลาก+หมุน');
+                }}
+                className={`p-2.5 rounded-xl border text-xs font-mono transition flex items-center gap-1.5 ${
+                  orbitMode
+                    ? 'bg-[#00FF88]/20 border-[#00FF88]/60 text-[#00FF88]'
+                    : 'bg-white/5 border-white/15 text-slate-300 hover:text-[#00FF88] hover:border-[#00FF88]/50'
+                }`}
+              >
+                {orbitMode ? '🔄 ORBIT' : '🎯 FOLLOW'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
                   setSoundEnabled(!soundEnabled);
                   triggerToast(soundEnabled ? '🔇 ปิดเสียง' : '🔊 เปิดใช้งาน Sound FX');
                 }}
                 className="p-2.5 rounded-xl bg-white/5 border border-white/15 text-slate-300 hover:text-white hover:border-[#00F0FF]/50 transition"
               >
                 {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setHighPerf(!highPerf);
-                  triggerToast(highPerf ? '🍃 โหมด Low 3D Graphics' : '⚡ โหมด High 3D Graphics');
-                }}
-                className="p-2.5 rounded-xl bg-white/5 border border-white/15 text-slate-300 hover:text-[#00F0FF] hover:border-[#00F0FF]/50 transition text-xs font-mono hidden sm:flex items-center gap-1.5"
-              >
-                <Cpu className="w-4 h-4 text-[#00F0FF]" />
-                <span>{highPerf ? 'HIGH 3D' : 'LOW 3D'}</span>
               </button>
 
               <a
@@ -647,6 +850,40 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {/* TELEMETRY HUD STRIP */}
+        <div className="fixed top-[72px] left-0 right-0 z-40 flex justify-center pointer-events-none">
+          <div className="bg-[#0A0F1A]/80 backdrop-blur-md border border-[#00F0FF]/20 rounded-b-xl px-5 py-1.5 flex items-center gap-6 font-mono text-[10px]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#718096] uppercase tracking-widest">FREQ</span>
+              <span className="text-[#00F0FF] font-bold tabular-nums">{telemetry.freq.toLocaleString()} MHz</span>
+              <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#00F0FF] rounded-full transition-all duration-700" style={{ width: `${((telemetry.freq - 700) / 2100) * 100}%` }} />
+              </div>
+            </div>
+            <div className="w-px h-4 bg-white/15" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#718096] uppercase tracking-widest">LATENCY</span>
+              <span className="text-[#00FF88] font-bold tabular-nums">{telemetry.latency} ms</span>
+              <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#00FF88] rounded-full transition-all duration-700" style={{ width: `${(telemetry.latency / 42) * 100}%` }} />
+              </div>
+            </div>
+            <div className="w-px h-4 bg-white/15" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#718096] uppercase tracking-widest">BW</span>
+              <span className="text-[#8B5CF6] font-bold tabular-nums">{telemetry.bw} MHz</span>
+              <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-[#8B5CF6] rounded-full transition-all duration-700" style={{ width: `${telemetry.bw}%` }} />
+              </div>
+            </div>
+            <div className="w-px h-4 bg-white/15" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF88] animate-pulse" />
+              <span className="text-[#718096]">LIVE SIGNAL</span>
+            </div>
+          </div>
+        </div>
 
         {/* HERO SECTION */}
         <section id="top" className="relative min-h-screen pt-32 pb-20 px-4 sm:px-8 flex items-center justify-center">
