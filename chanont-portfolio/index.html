@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chanont Wankaew - Interactive Portfolio Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#05070B',
+                            surface: '#0B0F19',
+                            card: 'rgba(11, 15, 25, 0.82)',
+                            cyan: '#00F0FF',
+                            green: '#00FF88',
+                            pink: '#FF007A',
+                            purple: '#8B5CF6',
+                            text: '#F1F5F9',
+                            muted: '#64748B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['ui-monospace', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #05070B; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.7); }
+        .glass-panel {
+            background: rgba(11, 15, 25, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.18);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 45vh;
+            max-height: 450px;
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+    </style>
+</head>
+<body class="bg-cyber-bg text-cyber-text font-sans antialiased selection:bg-cyber-cyan selection:text-black overflow-x-hidden">
+
+<!-- Chosen Palette: Deep Cybernetic (Obsidian Background #05070B, Neon Cyan #00F0FF, Emerald #00FF88, Purple #8B5CF6) -->
+<!-- Application Structure Plan: The SPA is designed as a "Telecom Intelligence Dashboard". Instead of a traditional top-to-bottom CV, it categorizes professional value into interactive modules: Immediate Impact (Hero Metrics), Domain Expertise (Capability Grid), Temporal Progression (Experience Bar Chart), Actionable Outcomes (Evidence Cards), and Verified Knowledge (Interactive Certification Donut). This layout is chosen to allow hiring managers and technical leads to immediately grasp data-driven achievements and interactively explore the candidate's career trajectory and continuous learning (340+ days of AI), mirroring the analytical nature of the roles targeted. -->
+<!-- Visualization & Content Choices: 1. Background -> Goal: Aesthetic Engagement -> Vanilla JS Canvas Particle Network -> Represents telecom signal/data nodes dynamically without SVG. 2. Career Experience -> Goal: Compare Tenure -> Horizontal Bar Chart (Chart.js) -> Visually maps the 10+ years across 9 roles, making career progression instantly understandable compared to a text list. 3. Certifications -> Goal: Organize & Filter -> Doughnut Chart (Chart.js) -> Categorizes the 11 certificates into "AI & ML" vs "Data Analytics". Clicking the slices dynamically filters the detailed credential list via JS, encouraging interactive exploration. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div id="bg-canvas-container" class="fixed inset-0 z-0 pointer-events-none w-full h-full">
+        <canvas id="bg-canvas" class="w-full h-full block"></canvas>
+    </div>
+
+    <nav class="fixed top-0 left-0 right-0 z-50 px-4 py-4">
+        <div class="max-w-7xl mx-auto glass-panel rounded-2xl px-6 py-3 flex items-center justify-between shadow-2xl">
+            <div class="flex items-center gap-3">
+                <span class="text-cyber-cyan text-2xl">◈</span>
+                <div>
+                    <div class="font-bold text-sm tracking-wide text-white">Chanont Wankaew</div>
+                    <div class="text-[10px] font-mono text-cyber-muted flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyber-green animate-pulse"></span>
+                        Telecom Intelligence Dashboard
+                    </div>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-6 font-mono text-xs text-cyber-muted">
+                <a href="#expertise" class="hover:text-cyber-cyan transition">Expertise</a>
+                <a href="#experience" class="hover:text-cyber-cyan transition">Experience</a>
+                <a href="#evidence" class="hover:text-cyber-cyan transition">Evidence</a>
+                <a href="#credentials" class="hover:text-cyber-cyan transition">Credentials</a>
+            </div>
+            <a href="#contact" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyber-cyan to-cyber-green text-black font-bold text-xs tracking-wider hover:opacity-90 transition">
+                CONTACT
+            </a>
+        </div>
+    </nav>
+
+    <main class="relative z-10 pt-32 pb-20 px-4 sm:px-8 max-w-7xl mx-auto space-y-24">
+
+        <section id="hero" class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div class="lg:col-span-8 space-y-6">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel text-cyber-cyan text-xs font-mono uppercase tracking-wider">
+                    <span class="text-cyber-cyan">✦</span>
+                    Telecom Data Analytics · RF Optimization · CEM
+                </div>
+                <h1 class="text-5xl sm:text-7xl font-extrabold tracking-tight text-white leading-tight">
+                    Engineering Signal.<br />
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-emerald-300 to-cyber-purple">
+                        Intelligent Action.
+                    </span>
+                </h1>
+                <p class="text-xl text-slate-200">
+                    Senior Telecom Data Analyst & AI Solutions Specialist
+                </p>
+                <p class="text-slate-300 max-w-2xl leading-relaxed">
+                    This interactive dashboard synthesizes over 10 years of RAN/RF Planning & Optimization experience (3G/4G/5G NR) with continuous self-directed AI mastery. Explore the data behind network KPI transformations and Customer Experience Management (CEM) value.
+                </p>
+            </div>
+            <div class="lg:col-span-4">
+                <div class="glass-panel p-6 rounded-2xl space-y-6">
+                    <h3 class="font-bold text-white text-sm border-b border-white/10 pb-2">Key Value Metrics</h3>
+                    <div class="grid grid-cols-2 gap-4 font-mono">
+                        <div>
+                            <div class="text-[10px] text-cyber-muted uppercase">Experience</div>
+                            <div class="text-2xl font-bold text-cyber-cyan">10+ Yrs</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-cyber-muted uppercase">Technology</div>
+                            <div class="text-2xl font-bold text-white">3G-5G NR</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-cyber-muted uppercase">Core Vendor</div>
+                            <div class="text-2xl font-bold text-white">Huawei</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-cyber-muted uppercase">AI Research</div>
+                            <div class="text-2xl font-bold text-cyber-purple">340+ Days</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="expertise">
+            <div class="space-y-4 mb-10">
+                <h2 class="text-3xl font-bold text-white">Capability Matrix</h2>
+                <p class="text-slate-400 max-w-3xl">
+                    A comprehensive breakdown of the core competencies utilized to drive network performance. This section outlines the technical foundation spanning radio frequency engineering, data processing, applied artificial intelligence, and specialized telecommunications tooling.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-cyber-cyan text-2xl mb-4">📡</div>
+                    <h3 class="font-bold text-white mb-4">Telecom & CEM</h3>
+                    <ul class="space-y-2 text-xs font-mono text-slate-300">
+                        <li>▪ RAN/RF Planning</li>
+                        <li>▪ RF Optimization</li>
+                        <li>▪ Drive-Test Analysis</li>
+                        <li>▪ Worst Cell Remediation</li>
+                        <li>▪ KPI Control (RRC, VoLTE)</li>
+                    </ul>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-cyber-green text-2xl mb-4">📊</div>
+                    <h3 class="font-bold text-white mb-4">Data Analytics</h3>
+                    <ul class="space-y-2 text-xs font-mono text-slate-300">
+                        <li>▪ Python (Pandas, NumPy)</li>
+                        <li>▪ SQL Data Extraction</li>
+                        <li>▪ Power Query & VBA</li>
+                        <li>▪ Power BI Dashboarding</li>
+                        <li>▪ Data Storytelling</li>
+                    </ul>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-cyber-purple text-2xl mb-4">🧠</div>
+                    <h3 class="font-bold text-white mb-4">AI & Cloud</h3>
+                    <ul class="space-y-2 text-xs font-mono text-slate-300">
+                        <li>▪ Prompt Engineering</li>
+                        <li>▪ RAG Pipelines</li>
+                        <li>▪ Vector Databases</li>
+                        <li>▪ FastAPI & Docker</li>
+                        <li>▪ Computer Vision & NLP</li>
+                    </ul>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-cyber-pink text-2xl mb-4">⚙️</div>
+                    <h3 class="font-bold text-white mb-4">Telecom Tools</h3>
+                    <ul class="space-y-2 text-xs font-mono text-slate-300">
+                        <li>▪ Huawei U2000 & PRS</li>
+                        <li>▪ GENEX Assistant</li>
+                        <li>▪ Actix Analyzer</li>
+                        <li>▪ TEMS / Nemo</li>
+                        <li>▪ MapInfo / Atoll</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="experience" class="bg-cyber-surface/50 rounded-3xl p-6 sm:p-10 border border-white/5">
+            <div class="space-y-4 mb-8">
+                <h2 class="text-3xl font-bold text-white">Career Timeline Analysis</h2>
+                <p class="text-slate-400 max-w-3xl">
+                    The following visualization quantifies over a decade of telecommunications experience. By mapping roles across major Thai telecom contractors and Huawei operations, this chart illustrates sustained progression in RF planning, optimization, and data analysis responsibilities. Interact with the bars to view specific role details.
+                </p>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="experienceChart"></canvas>
+            </div>
+        </section>
+
+        <section id="evidence">
+            <div class="space-y-4 mb-10">
+                <h2 class="text-3xl font-bold text-white">Engineering Evidence</h2>
+                <p class="text-slate-400 max-w-3xl">
+                    Selected case studies demonstrating the translation of technical network conditions into measurable customer value. These cases highlight the application of data analytics to solve complex RF challenges across various project environments, including the Bangkok Metropolitan Area.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-6 rounded-2xl space-y-4">
+                    <div class="text-xs font-mono text-cyber-cyan border border-cyber-cyan/30 px-2 py-1 rounded inline-block">DTA / CEM</div>
+                    <h3 class="text-xl font-bold text-white">BMA Drive-Test Intelligence</h3>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Context</span>ข้อมูล drive test และ network data ปริมาณมากในพื้นที่กรุงเทพมหานคร (BMA)</div>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Action</span>เชื่อมโยงค่า RF, วิเคราะห์ service behavior, ตรวจ customer-impact signals</div>
+                    <div class="text-sm text-cyber-cyan bg-cyber-cyan/10 p-3 rounded-lg"><span class="uppercase text-[10px] block font-bold mb-1">Value</span>จัดลำดับข้อเสนอแนะที่นำไปปฏิบัติได้ตามผลกระทบต่อประสบการณ์ลูกค้า</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl space-y-4">
+                    <div class="text-xs font-mono text-cyber-pink border border-cyber-pink/30 px-2 py-1 rounded inline-block">Worst Cell</div>
+                    <h3 class="text-xl font-bold text-white">Top 40 Worst-Cell Control</h3>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Context</span>ปัญหาประสิทธิภาพระดับ cell ที่เกิดซ้ำในโครงการ BMA 4G True</div>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Action</span>KPI review, Drive-test diagnosis, Parameter checking, Physical analysis</div>
+                    <div class="text-sm text-cyber-pink bg-cyber-pink/10 p-3 rounded-lg"><span class="uppercase text-[10px] block font-bold mb-1">Value</span>สร้าง remediation loop ที่ให้ความสำคัญกับ cell ซึ่งมีความเสี่ยงต่อบริการสูงสุด</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl space-y-4">
+                    <div class="text-xs font-mono text-cyber-purple border border-cyber-purple/30 px-2 py-1 rounded inline-block">KPI Control</div>
+                    <h3 class="text-xl font-bold text-white">Accessibility & VoLTE</h3>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Context</span>Primary KPIs: RRC, E-RAB, VoLTE Drop Rate</div>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Action</span>เชื่อมโยง counter data กับ RF conditions, วิเคราะห์ parameter</div>
+                    <div class="text-sm text-cyber-purple bg-cyber-purple/10 p-3 rounded-lg"><span class="uppercase text-[10px] block font-bold mb-1">Value</span>ทำให้การเปลี่ยนแปลง KPI สามารถอธิบายและนำไปใช้ตัดสินใจได้</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl space-y-4">
+                    <div class="text-xs font-mono text-cyber-green border border-cyber-green/30 px-2 py-1 rounded inline-block">Consolidation</div>
+                    <h3 class="text-xl font-bold text-white">Multi-Gen Consolidation</h3>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Context</span>การรวมเครือข่าย True และ DTAC ความซับซ้อนของ RF ข้ามเทคโนโลยี</div>
+                    <div class="text-sm text-slate-300"><span class="text-cyber-muted uppercase text-[10px] block">Action</span>ใช้ความรู้ 2G–5G ในการวางแผน, Validation และ Optimization</div>
+                    <div class="text-sm text-cyber-green bg-cyber-green/10 p-3 rounded-lg"><span class="uppercase text-[10px] block font-bold mb-1">Value</span>วิเคราะห์ประสบการณ์ลูกค้าข้ามเทคโนโลยี แทนการดู KPI แยกจากกัน</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="credentials" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div class="lg:col-span-12 space-y-4">
+                <h2 class="text-3xl font-bold text-white">Verified Learning & Certifications</h2>
+                <p class="text-slate-400 max-w-3xl">
+                    A visual categorization of 11 formal certifications documenting continuous professional development. The interactive doughnut chart displays the distribution between AI/Machine Learning competencies and Data/Automation skills. Click on a segment of the chart to dynamically filter the detailed credential list below, validating the "340+ Days of AI Research" metric.
+                </p>
+            </div>
+            
+            <div class="lg:col-span-5 glass-panel p-6 rounded-2xl flex flex-col items-center justify-center">
+                <div class="w-full max-w-[300px] aspect-square relative">
+                    <canvas id="certsChart"></canvas>
+                </div>
+                <p class="text-xs text-cyber-muted font-mono mt-4 text-center">Click chart segments to filter the list</p>
+            </div>
+            
+            <div class="lg:col-span-7 glass-panel p-6 rounded-2xl overflow-hidden flex flex-col">
+                <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
+                    <h3 class="font-bold text-white" id="cert-list-title">All Certifications (11)</h3>
+                    <button id="reset-cert-btn" class="text-xs font-mono text-cyber-cyan hover:underline hidden">Reset Filter</button>
+                </div>
+                <div class="overflow-y-auto pr-2 space-y-4 flex-1 max-h-[350px]" id="cert-list-container">
+                </div>
+            </div>
+        </section>
+
+        <footer id="contact" class="border-t border-white/10 pt-10 pb-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-mono text-cyber-muted">
+            <div class="flex gap-4">
+                <a href="mailto:chanon.wankaew@icloud.com" class="hover:text-cyber-cyan text-white">chanon.wankaew@icloud.com</a>
+                <span class="text-white">+66 98-285-2659</span>
+            </div>
+            <div>
+                © 2026 Chanont Wankaew · Sattahip, Chonburi, TH
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 1.5 + 0.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 70; i++) particles.push(new Particle());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 240, 255, ${0.1 - dist/1200})`;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        const expCtx = document.getElementById('experienceChart').getContext('2d');
+        new Chart(expCtx, {
+            type: 'bar',
+            data: {
+                labels: [
+                    'Turnkey (Sr. RF Opt & Data Analyst)',
+                    'Huawei (OSS Engineer - IBC)',
+                    'Metro Global (RF P&O Team Lead)',
+                    'Turnkey (Sr. Mobile Network RF 4G)',
+                    'CCS Comservice (Sr. RF P&O 3G/4G)',
+                    'Huawei (RF P&O 3G/4G)',
+                    'UbiNS (RF P&O 3G/4G)',
+                    'Elabram (Jr. RF P&O 3G/4G)',
+                    'TOT (Internship)'
+                ],
+                datasets: [{
+                    label: 'Approx. Years of Tenure',
+                    data: [0.5, 0.8, 4.0, 0.4, 0.7, 0.5, 0.4, 1.2, 0.8],
+                    backgroundColor: 'rgba(0, 240, 255, 0.6)',
+                    borderColor: '#00F0FF',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(11, 15, 25, 0.9)',
+                        titleColor: '#00F0FF',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(0, 240, 255, 0.3)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#64748B' },
+                        title: { display: true, text: 'Years', color: '#64748B' }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#CBD5E1', font: { size: 11, family: 'monospace' } }
+                    }
+                }
+            }
+        });
+
+        const certsDataRaw = [
+            { category: 'AI & ML', title: 'Foundation AI (Theory)', issuer: 'AIAT', date: 'Apr 2026' },
+            { category: 'AI & ML', title: 'AI Practitioner', issuer: 'AIAT', date: 'Apr 2026' },
+            { category: 'AI & ML', title: 'AI Online Hackathon (Practice)', issuer: 'AIAT', date: 'Mar 2026' },
+            { category: 'AI & ML', title: 'AI Ready ASEAN (15 Modules)', issuer: 'ASEAN Foundation / Google.org', date: 'Mar 2026' },
+            { category: 'AI & ML', title: 'Python for Data Science', issuer: 'Chula MOOC', date: 'May 2026' },
+            { category: 'Data & Automation', title: 'Advanced Reports with Power BI', issuer: 'FutureSkill', date: 'Feb 2025' },
+            { category: 'Data & Automation', title: 'Data Storytelling', issuer: 'FutureSkill', date: 'Jan 2025' },
+            { category: 'Data & Automation', title: 'Data Analytics for Business', issuer: 'FutureSkill', date: 'Jan 2025' },
+            { category: 'Data & Automation', title: 'Excel for Business Professional', issuer: 'FutureSkill', date: 'Jan 2025' },
+            { category: 'Data & Automation', title: 'Power Query for Power BI', issuer: 'FutureSkill', date: 'Dec 2024' },
+            { category: 'Data & Automation', title: 'Excel Advance: Macro & VBA Automation', issuer: 'FutureSkill', date: 'Dec 2024' }
+        ];
+
+        const certListContainer = document.getElementById('cert-list-container');
+        const certListTitle = document.getElementById('cert-list-title');
+        const resetCertBtn = document.getElementById('reset-cert-btn');
+
+        function renderCerts(filterCategory = null) {
+            certListContainer.innerHTML = '';
+            const filtered = filterCategory ? certsDataRaw.filter(c => c.category === filterCategory) : certsDataRaw;
+            
+            certListTitle.textContent = filterCategory ? `${filterCategory} (${filtered.length})` : `All Certifications (${filtered.length})`;
+            resetCertBtn.style.display = filterCategory ? 'block' : 'none';
+
+            filtered.forEach(cert => {
+                const colorClass = cert.category === 'AI & ML' ? 'text-cyber-purple border-cyber-purple/30 bg-cyber-purple/10' : 'text-cyber-pink border-cyber-pink/30 bg-cyber-pink/10';
+                const el = document.createElement('div');
+                el.className = 'p-3 bg-white/5 border border-white/5 rounded-xl';
+                el.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[10px] font-mono border px-2 py-0.5 rounded ${colorClass}">${cert.category}</span>
+                        <span class="text-xs text-cyber-muted font-mono">${cert.date}</span>
+                    </div>
+                    <div class="text-sm font-bold text-white">${cert.title}</div>
+                    <div class="text-xs text-slate-400">${cert.issuer}</div>
+                `;
+                certListContainer.appendChild(el);
+            });
+        }
+        renderCerts();
+
+        resetCertBtn.addEventListener('click', () => renderCerts());
+
+        const certsCtx = document.getElementById('certsChart').getContext('2d');
+        const certsChart = new Chart(certsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['AI & ML', 'Data & Automation'],
+                datasets: [{
+                    data: [5, 6],
+                    backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(255, 0, 122, 0.8)'],
+                    borderColor: '#0B0F19',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#CBD5E1', font: { family: 'monospace', size: 11 } } }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const category = certsChart.data.labels[index];
+                        renderCerts(category);
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
