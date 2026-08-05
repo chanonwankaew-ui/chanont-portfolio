@@ -16,13 +16,32 @@ import {
   ExternalLink,
   Phone,
   Mail,
-  Linkedin,
   FileText,
   FileDown,
   CheckCircle2,
   Languages,
 } from 'lucide-react';
 import * as THREE from 'three';
+
+// Lucide removed brand icons in recent versions, so we define a custom SVG for LinkedIn matching their style.
+const Linkedin = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
 
 // ข้อมูลใบประกาศนียบัตรทั้ง 11 ใบอย่างเป็นทางการของคุณชาณณฑ์ แว่นแก้ว
 const certsData = [
@@ -533,7 +552,7 @@ export default function App() {
     <div className="bg-[#04060A] text-[#F8FAFC] font-sans antialiased selection:bg-[#00F0FF] selection:text-black overflow-x-hidden min-h-screen">
       <!-- 3D BACKGROUND CANVAS -->
       <div className="fixed inset-0 z-0 pointer-events-none w-full h-full">
-        <canvas ref={canvasRef} class="w-full h-full block" />
+        <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
       <!-- SCANLINE OVERLAY -->
@@ -708,7 +727,7 @@ export default function App() {
                   <dd className="text-2xl font-bold text-white mt-1">3G – 5G NR</dd>
                 </div>
                 <div className="bg-[#0A0F1A]/90 p-4 rounded-xl border border-white/15">
-                  <dt class="text-[11px] text-[#718096] uppercase">Vendor Domain</dt>
+                  <dt className="text-[11px] text-[#718096] uppercase">Vendor Domain</dt>
                   <dd className="text-2xl font-bold text-white mt-1">Huawei TH</dd>
                 </div>
                 <div className="bg-[#0A0F1A]/90 p-4 rounded-xl border border-[#8B5CF6]/40">
@@ -752,7 +771,7 @@ export default function App() {
               <div className="pt-3 border-t border-white/10 flex flex-wrap gap-2 text-xs font-mono">
                 <a href="#evidence" className="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Worst Cell Case →</a>
                 <span className="text-white/20">•</span>
-                <a href="Chanont_Wankaew_Resume.pdf" download class="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Resume →</a>
+                <a href="Chanont_Wankaew_Resume.pdf" download className="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Resume →</a>
                 <span className="text-white/20">•</span>
                 <a href="#contact" className="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Contact →</a>
               </div>
@@ -783,7 +802,7 @@ export default function App() {
                 <ul className="space-y-2 text-xs font-mono text-slate-200">
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />RAN/RF Planning</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />RF Optimization</li>
-                  <li className="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />3G / 4G LTE / 5G NR</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />3G / 4G LTE / 5G NR</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />Drive-Test Analysis (DTA)</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />Worst Cell Remediation</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />KPI Control (RRC, VoLTE)</li>
@@ -828,7 +847,7 @@ export default function App() {
                 <ul className="space-y-2 text-xs font-mono text-slate-200">
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />Huawei U2000 & PRS</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />GENEX Assistant</li>
-                  <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />Actix Analyzer</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />Actix Analyzer</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />TEMS / Nemo / MapInfo</li>
                 </ul>
               </article>
@@ -991,7 +1010,7 @@ export default function App() {
                 08 / Contact & Initiation
               </div>
               <h2 className="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
-                Let’s improve network experience <span class="text-[#00F0FF]">with evidence.</span>
+                Let’s improve network experience <span className="text-[#00F0FF]">with evidence.</span>
               </h2>
             </div>
 
@@ -1016,7 +1035,7 @@ export default function App() {
                 <strong className="text-white text-sm block truncate">chanon.wankaew@icloud.com</strong>
               </button>
 
-              <a href="https://www.linkedin.com/in/chanont-wankaew" target="_blank" rel="noreferrer" class="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
+              <a href="https://www.linkedin.com/in/chanont-wankaew" target="_blank" rel="noreferrer" className="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
                 <div className="flex items-center justify-between text-[#00F0FF]">
                   <span>LinkedIn</span>
                   <Linkedin className="w-4 h-4" />
@@ -1024,12 +1043,12 @@ export default function App() {
                 <strong className="text-white text-sm block">chanont-wankaew</strong>
               </a>
 
-              <a href="Chanont_Wankaew_Resume.pdf" download class="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
+              <a href="Chanont_Wankaew_Resume.pdf" download className="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
                 <div className="flex items-center justify-between text-[#00F0FF]">
                   <span>Resume</span>
                   <FileText className="w-4 h-4" />
                 </div>
-                <strong class="text-white text-sm block">Download PDF</strong>
+                <strong className="text-white text-sm block">Download PDF</strong>
               </a>
             </div>
 
