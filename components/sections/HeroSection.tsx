@@ -1,6 +1,7 @@
 'use client';
 
 import CellTowerCanvas from '@/components/3d/CellTowerCanvas';
+import CyberHUD from '@/components/ui/CyberHUD';
 import { Download, UserCheck } from 'lucide-react';
 
 export default function HeroSection() {
@@ -8,6 +9,9 @@ export default function HeroSection() {
     <section id="top" className="relative min-h-screen pt-36 pb-24 px-4 sm:px-8 flex items-center justify-center bg-[#05070B] text-slate-100 overflow-hidden">
       {/* 3D WebGL Canvas Layer */}
       <CellTowerCanvas />
+      
+      {/* Glassmorphic Cyber HUD */}
+      <CyberHUD />
 
       {/* Hero UI Container */}
       <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
