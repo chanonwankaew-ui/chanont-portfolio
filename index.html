@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chanont Wankaew — Senior Telecom Data Analyst & AI Solutions Specialist</title>
+  <meta name="description" content="Cyberpunk 3D Telecom Command Center — 10+ Years RAN/RF & Applied AI Portfolio by Chanont Wankaew">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&family=Sarabun:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              bg: '#020408',
+              surface: '#070C16',
+              card: 'rgba(8, 14, 26, 0.90)',
+              cyan: '#00F0FF',
+              green: '#00FF88',
+              pink: '#FF007A',
+              purple: '#8B5CF6',
+              amber: '#FFB800',
+              text: '#F8FAFC',
+              muted: '#64748B'
+            }
+          },
+          fontFamily: {
+            sans: ['Sarabun', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Space Grotesk', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    /* สไตล์ Cyberpunk High-Contrast และ HUD Overlay */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #020408; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.5); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.9); }
+
+    .glass-panel {
+      background: rgba(8, 14, 26, 0.90);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    
+    .glass-panel-hover {
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-panel-hover:hover {
+      border-color: rgba(0, 240, 255, 0.75);
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 20px rgba(0, 240, 255, 0.12);
+      transform: translateY(-4px);
+    }
+
+    .glow-cyan { text-shadow: 0 0 20px rgba(0, 240, 255, 0.75); }
+    .glow-purple { text-shadow: 0 0 20px rgba(139, 92, 246, 0.75); }
+    .glow-pink { text-shadow: 0 0 20px rgba(255, 0, 122, 0.75); }
+    
+    .cyber-grid-bg {
+      background-image: linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    
+    .scanline {
+      background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.35) 51%);
+      background-size: 100% 4px;
+    }
+
+    /* กรอบตัดมุมสไตล์ HUD (Cyber Corners) */
+    .hud-bracket {
+      position: relative;
+    }
+    .hud-bracket::before, .hud-bracket::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: #00F0FF;
+      pointer-events: none;
+    }
+    .hud-bracket::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+    .hud-bracket::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+    /* Modal Backdrop Blur */
+    .modal-backdrop {
+      background: rgba(2, 4, 8, 0.88);
+      backdrop-filter: blur(16px);
+    }
+
+    /* Toast Animation */
+    .toast-popup {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1000;
+    }
+    .toast-popup.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-cyber-bg text-cyber-text font-sans antialiased selection:bg-cyber-cyan selection:text-black overflow-x-hidden">
+
+  <div id="canvas-container" class="fixed inset-0 z-0 pointer-events-auto w-full h-full">
+    <canvas id="bg-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+  </div>
+  
+  <div class="fixed inset-0 z-0 pointer-events-none scanline opacity-25"></div>
+
+  <div class="relative z-10 pointer-events-none">
+
+    <header class="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-8 pointer-events-auto">
+      <div class="max-w-7xl mx-auto glass-panel hud-bracket rounded-2xl px-5 py-3 flex items-center justify-between shadow-2xl border-cyber-cyan/40">
+        
+        <a href="#top" class="flex items-center gap-3.5 group" onclick="playCyberSound('click')">
+          <div class="w-10 h-10 rounded-xl bg-cyber-cyan/20 border border-cyber-cyan/60 flex items-center justify-center text-cyber-cyan group-hover:bg-cyber-cyan group-hover:text-black transition-all shadow-[0_0_20px_rgba(0,240,255,0.4)]">
+            <i data-lucide="radio" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="font-display font-bold text-sm tracking-wide text-white group-hover:text-cyber-cyan transition-colors flex items-center gap-2">
+              Chanont Wankaew
+              <span class="text-[10px] font-mono font-bold text-cyber-cyan bg-cyber-cyan/15 px-2 py-0.5 rounded border border-cyber-cyan/40 animate-pulse">CYBER 3D v3.5</span>
+            </div>
+            <div class="text-[10px] font-mono text-cyber-muted flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyber-green animate-ping"></span>
+              <span class="text-cyber-green font-bold">5G NR 3500MHz</span> · Cursor Signal Emitter Active
+            </div>
+          </div>
+        </a>
+
+        <nav aria-label="เมนูหลัก" class="hidden lg:flex items-center gap-1 font-mono text-xs">
+          <a href="#capabilities" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-cyber-cyan hover:bg-white/5 transition" onclick="playCyberSound('click')">Capabilities</a>
+          <a href="#evidence" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-cyber-cyan hover:bg-white/5 transition" onclick="playCyberSound('click')">Evidence Cases</a>
+          <a href="#experience" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-cyber-cyan hover:bg-white/5 transition" onclick="playCyberSound('click')">Timeline</a>
+          <a href="#credentials" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-cyber-cyan hover:bg-white/5 transition" onclick="playCyberSound('click')">Certs (11)</a>
+          <a href="#contact" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-cyber-cyan hover:bg-white/5 transition" onclick="playCyberSound('click')">Terminal CLI</a>
+        </nav>
+
+        <div class="flex items-center gap-2">
+          <button id="emitter-btn" onclick="toggleCursorEmitter()" class="px-3 py-1.5 rounded-xl bg-cyber-cyan/20 border border-cyber-cyan/60 text-cyber-cyan hover:bg-cyber-cyan hover:text-black transition text-xs font-mono flex items-center gap-1.5 font-bold" title="เปิด/ปิดการส่งคลื่นสัญญาณ 3D ออกจากเคอร์เซอร์เมาส์">
+            <i data-lucide="waves" class="w-4 h-4"></i>
+            <span id="emitter-label">Cursor Waves: ON</span>
+          </button>
+
+          <button id="orbit-btn" onclick="toggleOrbitControls()" class="p-2.5 rounded-xl bg-white/5 border border-white/15 text-slate-300 hover:text-cyber-cyan hover:border-cyber-cyan/50 transition text-xs font-mono hidden sm:flex items-center gap-1.5" title="หมุนกล้อง 3D อิสระ 360 องศา">
+            <i data-lucide="rotate-3d" class="w-4 h-4 text-cyber-cyan"></i>
+            <span id="orbit-label">Orbit: OFF</span>
+          </button>
+
+          <button id="sound-btn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-white/5 border border-white/15 text-slate-300 hover:text-white hover:border-cyber-cyan/50 transition" title="เปิด/ปิดเสียงเอฟเฟกต์">
+            <i data-lucide="volume-x" id="sound-icon" class="w-4 h-4"></i>
+          </button>
+
+          <a href="#contact" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyber-cyan via-emerald-400 to-cyber-green text-black font-display font-bold text-xs tracking-wider hover:opacity-90 transition shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center gap-1.5" onclick="playCyberSound('click')">
+            <span>CONTACT</span> ↗
+          </a>
+        </div>
+      </div>
+    </header>
+
+
+    <section id="top" class="relative min-h-screen pt-36 pb-20 px-4 sm:px-8 flex items-center justify-center cyber-grid-bg">
+      <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pointer-events-auto">
+        
+        <div class="lg:col-span-8 space-y-6">
+          <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-panel text-cyber-cyan text-xs font-mono tracking-wider uppercase border-cyber-cyan/50 shadow-[0_0_25px_rgba(0,240,255,0.25)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-pulse shadow-[0_0_12px_#00F0FF]"></span>
+            Telecom Data Analytics · RF Optimization · CEM Focus
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight text-white leading-[1.05]">
+            Engineering Signal.<br />
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-emerald-300 to-cyber-purple glow-cyan">
+              Intelligent Action.
+            </span>
+          </h1>
+
+          <p class="text-xl sm:text-2xl font-display font-medium text-slate-200">
+            Senior Telecom Data Analyst & AI Solutions Specialist (CEM Focus)
+          </p>
+
+          <p class="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed font-sans">
+            วิศวกรโทรคมนาคมและผู้เชี่ยวชาญด้านการวิเคราะห์ข้อมูลที่มีประสบการณ์ภาคสนาม RAN/RF Planning & Optimization (3G/4G/5G NR) มากกว่า 10 ปี ผสานการวิจัยพัฒนา AI เชิงลึก (340+ วัน) เพื่อเปลี่ยนข้อมูล Network Evidence ให้กลายเป็นคุณค่าประสบการณ์ลูกค้า (CEM Value)
+          </p>
+
+          <div class="p-3.5 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/30 text-xs font-mono text-cyber-cyan flex items-center gap-3">
+            <i data-lucide="mouse-pointer-click" class="w-5 h-5 shrink-0 text-cyber-cyan animate-bounce"></i>
+            <span><strong>INTERACTIVE 3D:</strong> ขยับเมาส์เพื่อส่งคลื่นวิทยุ 3D หรือคลิกเมาส์บนหน้าจอเพื่อยิงคลื่น 5G Burst Shockwave!</span>
+          </div>
+
+          <div class="flex flex-wrap gap-3.5 pt-2 font-mono text-xs">
+            <a href="#evidence" class="px-6 py-3.5 rounded-xl bg-cyber-cyan text-black font-bold hover:bg-white transition shadow-[0_0_25px_rgba(0,240,255,0.4)] flex items-center gap-2" onclick="playCyberSound('click')">
+              <span>ดูผลงานวิศวกรรม (Evidence Cases)</span> ↗
+            </a>
+            <a href="Chanont_Wankaew_Resume.pdf" download class="px-6 py-3.5 rounded-xl glass-panel text-white hover:bg-white/10 transition flex items-center gap-2 border-cyber-cyan/40" onclick="playCyberSound('click')">
+              <i data-lucide="download" class="w-4 h-4 text-cyber-cyan"></i>
+              <span>ดาวน์โหลด Resume PDF</span> ↘
+            </a>
+            <button onclick="triggerCursorBurst(event)" class="px-5 py-3.5 rounded-xl border border-cyber-green/60 text-cyber-green hover:bg-cyber-green/10 transition flex items-center gap-2 font-bold">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+              <span>ทดลองยิงคลื่น 5G Burst</span>
+            </button>
+          </div>
+
+          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-white/10 font-mono">
+            <div class="glass-panel p-4 rounded-xl border-cyber-cyan/40">
+              <dt class="text-[11px] text-cyber-muted uppercase">Telecom Depth</dt>
+              <dd class="text-2xl font-bold text-cyber-cyan mt-1">10+ Years</dd>
+            </div>
+            <div class="glass-panel p-4 rounded-xl border-white/15">
+              <dt class="text-[11px] text-cyber-muted uppercase">Network Tech</dt>
+              <dd class="text-2xl font-bold text-white mt-1">3G – 5G NR</dd>
+            </div>
+            <div class="glass-panel p-4 rounded-xl border-white/15">
+              <dt class="text-[11px] text-cyber-muted uppercase">Vendor Domain</dt>
+              <dd class="text-2xl font-bold text-white mt-1">Huawei TH</dd>
+            </div>
+            <div class="glass-panel p-4 rounded-xl border-cyber-purple/50">
+              <dt class="text-[11px] text-cyber-muted uppercase">AI Research</dt>
+              <dd class="text-2xl font-bold text-cyber-purple mt-1">340+ Days</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="lg:col-span-4 glass-panel hud-bracket p-6 sm:p-7 rounded-2xl border-cyber-cyan/40 space-y-5 shadow-2xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-cyber-cyan/10 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+            <h3 class="font-display font-bold text-sm text-white flex items-center gap-2">
+              <i data-lucide="user-check" class="w-4.5 h-4.5 text-cyber-cyan"></i>
+              Recruiter Fast-Path
+            </h3>
+            <span class="text-[10px] font-mono text-cyber-green bg-cyber-green/15 px-2.5 py-0.5 rounded-full border border-cyber-green/40 font-bold">AVAILABLE</span>
+          </div>
+
+          <div class="space-y-3.5 text-xs font-mono">
+            <div>
+              <span class="text-cyber-muted block text-[10px] uppercase mb-0.5">ตำแหน่งเป้าหมาย</span>
+              <p class="text-slate-100 font-sans font-semibold">Senior Telecom Data Analyst / RF Optimization & CEM Specialist</p>
+            </div>
+            <div>
+              <span class="text-cyber-muted block text-[10px] uppercase mb-0.5">ประสบการณ์หลัก</span>
+              <p class="text-slate-100 font-sans font-medium">RAN/RF 3G-5G NR, Huawei Ecosystem, BMA Optimization</p>
+            </div>
+            <div>
+              <span class="text-cyber-muted block text-[10px] uppercase mb-0.5">สถานที่ปฏิบัติงาน</span>
+              <p class="text-slate-100 font-sans font-medium">สัตหีบ ชลบุรี / กรุงเทพมหานคร (BMA)</p>
+            </div>
+            <div>
+              <span class="text-cyber-muted block text-[10px] uppercase mb-0.5">ข้อได้เปรียบเด่น</span>
+              <p class="text-slate-100 font-sans font-medium">เปลี่ยน Network Evidence เป็น Customer-Impact Priorities ได้แม่นยำ</p>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-white/10 flex flex-wrap gap-2 text-xs font-mono">
+            <a href="#evidence" class="text-cyber-cyan hover:text-white transition flex items-center gap-1 font-bold">Worst Cell Case →</a>
+            <span class="text-white/20">•</span>
+            <a href="Chanont_Wankaew_Resume.pdf" download class="text-cyber-cyan hover:text-white transition flex items-center gap-1 font-bold">Resume →</a>
+            <span class="text-white/20">•</span>
+            <a href="#contact" class="text-cyber-cyan hover:text-white transition flex items-center gap-1 font-bold">Contact →</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <section id="capabilities" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10 pointer-events-auto">
+      <div class="space-y-10">
+        
+        <div class="space-y-3">
+          <div class="text-xs font-mono text-cyber-cyan uppercase tracking-widest flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+            01 / Capability Matrix
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+            Domain Depth. <span class="text-cyber-cyan glow-cyan">Digital Leverage.</span>
+          </h2>
+          <p class="text-sm text-slate-300 max-w-2xl font-sans leading-relaxed">
+            นำเสนอ skill stack ที่ออกแบบมาสำหรับงาน CEM, RF Optimization และการตัดสินใจร่วมกันระหว่างทีมเทคนิคกับทีมบริหาร
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <article class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between text-cyber-cyan font-mono text-sm">
+              <span class="font-bold">01</span>
+              <i data-lucide="tower-control" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg text-white">Telecom & CEM</h3>
+            <ul class="space-y-2 text-xs font-mono text-slate-200">
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>RAN/RF Planning</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>RF Optimization</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>3G / 4G LTE / 5G NR</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>Drive-Test Analysis (DTA)</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>Worst Cell Remediation</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>KPI Control (RRC, VoLTE)</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-cyan rounded-full"></span>Network Consolidation</li>
+            </ul>
+          </article>
+
+          <article class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between text-cyber-green font-mono text-sm">
+              <span class="font-bold">02</span>
+              <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg text-white">Data Analytics</h3>
+            <ul class="space-y-2 text-xs font-mono text-slate-200">
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-green rounded-full"></span>Python (Pandas, NumPy)</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-green rounded-full"></span>SQL Data Extraction</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-green rounded-full"></span>Power Query & VBA Macro</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-green rounded-full"></span>Power BI Dashboarding</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-green rounded-full"></span>Data Storytelling & Reporting</li>
+            </ul>
+          </article>
+
+          <article class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between text-cyber-purple font-mono text-sm">
+              <span class="font-bold">03</span>
+              <i data-lucide="cpu" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg text-white">AI & Cloud</h3>
+            <ul class="space-y-2 text-xs font-mono text-slate-200">
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-purple rounded-full"></span>Prompt Engineering (GPT-4)</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-purple rounded-full"></span>RAG Pipelines</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-purple rounded-full"></span>Vector Databases</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-purple rounded-full"></span>FastAPI</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-purple rounded-full"></span>Docker Containerization</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-purple rounded-full"></span>Computer Vision & NLP</li>
+            </ul>
+          </article>
+
+          <article class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between text-cyber-pink font-mono text-sm">
+              <span class="font-bold">04</span>
+              <i data-lucide="wrench" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg text-white">Telecom Tools</h3>
+            <ul class="space-y-2 text-xs font-mono text-slate-200">
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>Huawei U2000</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>Huawei iManager PRS</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>GENEX Assistant</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>Actix Analyzer</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>TEMS / Nemo Analyze</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>MapInfo Professional</li>
+              <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-cyber-pink rounded-full"></span>Atoll</li>
+            </ul>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="evidence" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10 pointer-events-auto">
+      <div class="space-y-10">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="space-y-3">
+            <div class="text-xs font-mono text-cyber-cyan uppercase tracking-widest flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+              02 / Engineering Evidence Cases
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+              From Network Condition <span class="text-cyber-cyan glow-cyan">to Customer Value.</span>
+            </h2>
+            <p class="text-sm text-slate-300 max-w-2xl font-sans leading-relaxed">
+              แสดงผลงาน RAN/RF ในรูปแบบ case evidence ที่เชื่อมโยงจากปัญหาทางเทคนิคไปยังผลกระทบต่อผู้ใช้งานจริง
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-2 font-mono text-xs">
+            <button onclick="filterEvidence('all')" id="btn-ev-all" class="px-3.5 py-2 rounded-xl bg-cyber-cyan text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)] transition">All Cases (5)</button>
+            <button onclick="filterEvidence('dta')" id="btn-ev-dta" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">DTA</button>
+            <button onclick="filterEvidence('worst')" id="btn-ev-worst" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">Worst Cell</button>
+            <button onclick="filterEvidence('kpi')" id="btn-ev-kpi" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">KPI Control</button>
+            <button onclick="filterEvidence('consolidation')" id="btn-ev-consolidation" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">Consolidation</button>
+            <button onclick="filterEvidence('oss')" id="btn-ev-oss" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">OSS</button>
+          </div>
+        </div>
+
+        <div id="evidence-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <article class="ev-card ev-dta glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm text-cyber-cyan font-bold">01</span>
+                <span class="text-xs font-mono bg-cyber-cyan/15 text-cyber-cyan px-2.5 py-1 rounded-full border border-cyber-cyan/40 font-semibold">DTA / CEM</span>
+              </div>
+              <button onclick="openTraceModal('BMA Drive-Test Intelligence', '99.4% Call Success Rate', 'RSRP > -92dBm Coverage 94.2%')" class="text-[10px] font-mono text-cyber-green flex items-center gap-1 font-bold hover:underline">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyber-green animate-pulse"></span> Open Live Trace Graph ↗
+              </button>
+            </div>
+            <h3 class="font-display font-bold text-xl text-white">BMA Drive-Test Intelligence</h3>
+            <div class="space-y-3.5 text-xs font-sans">
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Context</span>
+                <p class="text-slate-200 mt-0.5">ข้อมูล drive test และ network data ปริมาณมากในพื้นที่กรุงเทพมหานคร (BMA)</p>
+              </div>
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Engineering Action</span>
+                <p class="text-slate-200 mt-0.5">เชื่อมโยงค่า RF, วิเคราะห์ service behavior, ตรวจ customer-impact signals</p>
+              </div>
+              <div class="bg-cyber-cyan/10 p-3.5 rounded-xl border border-cyber-cyan/30">
+                <span class="font-mono text-cyber-cyan text-[11px] block uppercase font-bold">CEM Value</span>
+                <p class="text-slate-100 mt-0.5 font-medium">จัดลำดับข้อเสนอแนะที่นำไปปฏิบัติได้ตามผลกระทบต่อประสบการณ์ลูกค้า</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="ev-card ev-worst glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm text-cyber-cyan font-bold">02</span>
+                <span class="text-xs font-mono bg-cyber-pink/15 text-cyber-pink px-2.5 py-1 rounded-full border border-cyber-pink/40 font-semibold">Worst Cell</span>
+              </div>
+              <button onclick="openTraceModal('Top 40 Worst-Cell Control', '40/40 Cells Remediated', 'KPI Drop Rate reduced by 78%')" class="text-[10px] font-mono text-cyber-pink flex items-center gap-1 font-bold hover:underline">
+                Open Action Matrix ↗
+              </button>
+            </div>
+            <h3 class="font-display font-bold text-xl text-white">Top 40 Worst-Cell Control</h3>
+            <div class="space-y-3.5 text-xs font-sans">
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Context</span>
+                <p class="text-slate-200 mt-0.5">ปัญหาประสิทธิภาพระดับ cell ที่เกิดซ้ำในโครงการ BMA 4G True</p>
+              </div>
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Engineering Action</span>
+                <p class="text-slate-200 mt-0.5">KPI review, Drive-test diagnosis, Parameter checking, Physical configuration analysis</p>
+              </div>
+              <div class="bg-cyber-pink/10 p-3.5 rounded-xl border border-cyber-pink/30">
+                <span class="font-mono text-cyber-pink text-[11px] block uppercase font-bold">CEM Value</span>
+                <p class="text-slate-100 mt-0.5 font-medium">สร้าง remediation loop ที่ให้ความสำคัญกับ cell ซึ่งมีความเสี่ยงต่อบริการสูงสุด</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="ev-card ev-kpi glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm text-cyber-cyan font-bold">03</span>
+                <span class="text-xs font-mono bg-cyber-purple/15 text-cyber-purple px-2.5 py-1 rounded-full border border-cyber-purple/40 font-semibold">KPI Control</span>
+              </div>
+              <div class="text-[10px] font-mono text-cyber-muted">Primary KPIs: RRC, E-RAB, VoLTE</div>
+            </div>
+            <h3 class="font-display font-bold text-xl text-white">Accessibility & VoLTE Performance</h3>
+            <div class="space-y-3.5 text-xs font-sans">
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Engineering Action</span>
+                <p class="text-slate-200 mt-0.5">เชื่อมโยง counter data กับ RF conditions, วิเคราะห์ parameter configuration และ physical optimization options</p>
+              </div>
+              <div class="bg-cyber-purple/10 p-3.5 rounded-xl border border-cyber-purple/30">
+                <span class="font-mono text-cyber-purple text-[11px] block uppercase font-bold">CEM Value</span>
+                <p class="text-slate-100 mt-0.5 font-medium">ทำให้การเปลี่ยนแปลง KPI สามารถอธิบายและนำไปใช้ตัดสินใจได้</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="ev-card ev-consolidation glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm text-cyber-cyan font-bold">04</span>
+                <span class="text-xs font-mono bg-cyber-green/15 text-cyber-green px-2.5 py-1 rounded-full border border-cyber-green/40 font-semibold">Consolidation</span>
+              </div>
+            </div>
+            <h3 class="font-display font-bold text-xl text-white">Multi-Generation Network Consolidation</h3>
+            <div class="space-y-3.5 text-xs font-sans">
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Context</span>
+                <p class="text-slate-200 mt-0.5">การรวมเครือข่าย True และ DTAC ความซับซ้อนของ RF และ service quality ระหว่างหลายเทคโนโลยี</p>
+              </div>
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Engineering Action</span>
+                <p class="text-slate-200 mt-0.5">ใช้ความรู้ 2G–5G ในการวางแผน, Validation และ Optimization</p>
+              </div>
+              <div class="bg-cyber-green/10 p-3.5 rounded-xl border border-cyber-green/30">
+                <span class="font-mono text-cyber-green text-[11px] block uppercase font-bold">CEM Value</span>
+                <p class="text-slate-100 mt-0.5 font-medium">วิเคราะห์ประสบการณ์ลูกค้าข้ามเทคโนโลยี แทนการดู KPI ของแต่ละระบบแยกจากกัน</p>
+              </div>
+            </article>
+
+          <article class="ev-card ev-oss glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4 md:col-span-2">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm text-cyber-cyan font-bold">05</span>
+                <span class="text-xs font-mono bg-cyan-500/15 text-cyan-400 px-2.5 py-1 rounded-full border border-cyan-500/40 font-semibold">Huawei OSS</span>
+              </div>
+            </div>
+            <h3 class="font-display font-bold text-xl text-white">IBC Operational Support</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-sans">
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Context</span>
+                <p class="text-slate-200 mt-0.5">งาน in-building coverage ต้องอาศัย OSS visibility ที่แม่นยำ</p>
+              </div>
+              <div>
+                <span class="font-mono text-cyber-muted text-[10px] block uppercase font-semibold">Engineering Action</span>
+                <p class="text-slate-200 mt-0.5">สนับสนุน U2000 และ iManager, Alarm investigation, Performance investigation, Operational coordination</p>
+              </div>
+              <div class="bg-white/5 p-3.5 rounded-xl border border-white/15">
+                <span class="font-mono text-white text-[11px] block uppercase font-bold">CEM Value</span>
+                <p class="text-slate-100 mt-0.5 font-medium">เชื่อม OSS evidence เข้ากับการตอบสนองต่อปัญหา indoor network</p>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="experience" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10 pointer-events-auto">
+      <div class="space-y-10">
+        
+        <div class="space-y-3">
+          <div class="text-xs font-mono text-cyber-cyan uppercase tracking-widest flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+            03 / Employment Timeline (10+ Years)
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+            A Career Built From Field Evidence <span class="text-cyber-cyan glow-cyan">to CEM Intelligence.</span>
+          </h2>
+        </div>
+
+        <div class="relative pl-6 sm:pl-8 border-l border-white/15 space-y-8">
+          
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-cyber-cyan group-hover:bg-cyber-cyan transition-colors shadow-[0_0_10px_#00F0FF]"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-cyber-cyan font-bold">Jan 2025 – Jun 2025</span>
+                <span class="text-cyber-muted">Turnkey Communication Services Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Senior RF Optimization & Data Analyst</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-cyber-cyan group-hover:bg-cyber-cyan transition-colors shadow-[0_0_10px_#00F0FF]"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-cyber-cyan font-bold">Jun 2022 – Apr 2023</span>
+                <span class="text-cyber-muted">Huawei Technologies (Thailand) Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">OSS Engineer — In-Building Coverage (IBC) Team</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-cyber-cyan group-hover:bg-cyber-cyan transition-colors shadow-[0_0_10px_#00F0FF]"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-cyber-cyan font-bold">May 2018 – May 2022</span>
+                <span class="text-cyber-muted">Metro Global Services Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Mobile Network RF Planning & Optimization Engineer Team Lead</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-slate-600"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Nov 2017 – Apr 2018</span>
+                <span class="text-slate-400">Turnkey Communication Services Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Senior Mobile Network RF Planning & Optimization Engineer (4G)</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-slate-600"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Jan 2017 – Sep 2017</span>
+                <span class="text-slate-400">CCS Comservice (Thailand) Limited</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Senior Mobile Network RF Planning & Optimization Engineer (3G / 4G)</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-slate-600"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Jul 2016 – Dec 2016</span>
+                <span class="text-slate-400">Huawei Technology (Thailand) Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Mobile Network RF Planning & Optimization Engineer (3G / 4G)</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-slate-600"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Feb 2016 – Jun 2016</span>
+                <span class="text-slate-400">UbiNS (Thailand) Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Mobile Network RF Planning & Optimization Engineer (3G / 4G)</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-slate-600"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Nov 2014 – Jan 2016</span>
+                <span class="text-slate-400">Elabram Systems Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Junior Mobile Network RF Planning & Optimization Engineer (3G / 4G)</h3>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <span class="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-cyber-bg border-2 border-slate-600"></span>
+            <div class="glass-panel p-5 rounded-xl space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Jan 2014 – Oct 2014</span>
+                <span class="text-slate-400">TOT Public Co., Ltd.</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Mobile Network Engineer (3G / 4G) — Internship</h3>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="development" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10 pointer-events-auto">
+      <div class="space-y-10">
+        
+        <div class="space-y-3">
+          <div class="text-xs font-mono text-cyber-cyan uppercase tracking-widest flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+            04 / Development & Education
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+            Academic Foundations <span class="text-cyber-cyan glow-cyan">& Continuous AI Growth.</span>
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div class="glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
+                <i data-lucide="graduation-cap" class="w-5 h-5 text-cyber-cyan"></i>
+                Academic Education
+              </h3>
+              <span class="text-xs font-mono text-cyber-cyan font-bold">DEGREE</span>
+            </div>
+            <div class="space-y-4 text-xs font-sans">
+              <div class="space-y-1">
+                <strong class="text-white text-sm block">Bachelor of Engineering (B.Eng.) in Telecommunications Engineering</strong>
+                <p class="text-cyber-muted font-mono">Rajamangala University of Technology Thanyaburi (RMUTT)</p>
+              </div>
+              <div class="space-y-1 pt-3 border-t border-white/5">
+                <strong class="text-white text-sm block">Higher Technical Certificate in Electrical & Electronics</strong>
+                <p class="text-cyber-muted font-mono">Thai-Austrian Technical College</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
+                <i data-lucide="languages" class="w-5 h-5 text-cyber-green"></i>
+                English Language Mastery
+              </h3>
+              <span class="text-xs font-mono text-cyber-green font-bold">May 2023 – Dec 2024</span>
+            </div>
+            <ul class="space-y-2.5 text-xs font-mono text-slate-200">
+              <li class="flex items-center gap-2.5"><i data-lucide="check-circle-2" class="w-4 h-4 text-cyber-green"></i> Professional business communication</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check-circle-2" class="w-4 h-4 text-cyber-green"></i> Technical reading & documentation</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check-circle-2" class="w-4 h-4 text-cyber-green"></i> International team collaboration readiness</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check-circle-2" class="w-4 h-4 text-cyber-green"></i> Historical TOEIC Score: 575</li>
+            </ul>
+          </div>
+
+          <div class="glass-panel p-6 sm:p-7 rounded-2xl glass-panel-hover space-y-4 md:col-span-2">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-5 h-5 text-cyber-purple"></i>
+                Self-Directed AI Mastery & Advanced Research (340+ Days)
+              </h3>
+              <span class="text-xs font-mono text-cyber-purple font-bold">June 2024 – Present</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono text-slate-200">
+              <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-1">
+                <span class="text-white font-bold block">Structured Python & Data</span>
+                <p class="text-slate-300 font-sans text-[11px]">Chula MOOC Python programming, data structures & analytical workflows.</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-1">
+                <span class="text-white font-bold block">Super AI Engineer S6</span>
+                <p class="text-slate-300 font-sans text-[11px]">13 core domains: ML, Deep Learning, NLP, Computer Vision & RAG.</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-1">
+                <span class="text-white font-bold block">AI Hackathons & Practice</span>
+                <p class="text-slate-300 font-sans text-[11px]">Online Hackathon "From Data to Insight" practical ML model optimization.</p>
+              </div>
+              <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-1">
+                <span class="text-white font-bold block">AI Ready ASEAN & Safety</span>
+                <p class="text-slate-300 font-sans text-[11px]">15 modules: Prompt engineering 101, Data privacy & AI safety standards.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="credentials" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10 pointer-events-auto">
+      <div class="space-y-10">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="space-y-3">
+            <div class="text-xs font-mono text-cyber-cyan uppercase tracking-widest flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+              05 / Credentials Gallery
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+              Verified Learning. <span class="text-cyber-cyan glow-cyan">11 Certificates.</span>
+            </h2>
+          </div>
+
+          <div class="flex flex-wrap gap-2 font-mono text-xs">
+            <button onclick="filterCerts('all')" id="btn-cert-all" class="px-3.5 py-2 rounded-xl bg-cyber-cyan text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)] transition">All (11)</button>
+            <button onclick="filterCerts('ai')" id="btn-cert-ai" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">AI & ML (5)</button>
+            <button onclick="filterCerts('data')" id="btn-cert-data" class="px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition">Data & Automation (6)</button>
+          </div>
+        </div>
+
+        <div id="certs-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <article class="cert-card cert-ai cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-cyan bg-cyber-cyan/15 px-2.5 py-0.5 rounded-full border border-cyber-cyan/40 font-semibold">Chula MOOC</span>
+                <span class="text-cyber-muted">31 May 2026</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Python for Data Science</h3>
+              <p class="text-xs font-mono text-cyber-muted">Chulalongkorn University</p>
+              <p class="text-xs text-slate-200">ผ่านหลักสูตรทฤษฎีและปฏิบัติการพัฒนาโปรแกรมและการจัดการข้อมูลเชิงลึกด้วยภาษา Python</p>
+            </div>
+            <a href="Screenshot 2569-08-05 at 01.06.40.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-ai glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-purple bg-cyber-purple/15 px-2.5 py-0.5 rounded-full border border-cyber-purple/40 font-semibold">Super AI S6</span>
+                <span class="text-cyber-muted">18 Apr 2026</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Foundation AI (Theory)</h3>
+              <p class="text-xs font-mono text-cyber-muted">Artificial Intelligence Association of Thailand (AIAT)</p>
+              <p class="text-xs text-slate-200">ผ่านการวัดความรู้ภาคทฤษฎีขั้นต้น ครอบคลุม 13 รายวิชาหลัก (ML, Deep Learning, RAG, NLP)</p>
+            </div>
+            <a href="certificate-584c7437-7b81-4399-91a4-c2102901880d.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-ai glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-purple bg-cyber-purple/15 px-2.5 py-0.5 rounded-full border border-cyber-purple/40 font-semibold">Super AI S6</span>
+                <span class="text-cyber-muted">1 Apr 2026</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">AI Practitioner</h3>
+              <p class="text-xs font-mono text-cyber-muted">Artificial Intelligence Association of Thailand (AIAT)</p>
+              <p class="text-xs text-slate-200">ผ่านเกณฑ์คะแนนขั้นพื้นฐานด้านปัญญาประดิษฐ์</p>
+            </div>
+            <a href="Screenshot 2569-08-05 at 00.57.12.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-ai glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-purple bg-cyber-purple/15 px-2.5 py-0.5 rounded-full border border-cyber-purple/40 font-semibold">Super AI S6</span>
+                <span class="text-cyber-muted">21 Mar 2026</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">AI Online Hackathon (Practice)</h3>
+              <p class="text-xs font-mono text-cyber-muted">AIAT — "From Data to Insight"</p>
+              <p class="text-xs text-slate-200">ผ่านเกณฑ์คะแนนขั้นพื้นฐาน การแข่งขันภาคปฏิบัติการนำข้อมูลมาวิเคราะห์หา Insight</p>
+            </div>
+            <a href="Screenshot 2569-08-05 at 00.59.21.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-ai glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-green bg-cyber-green/15 px-2.5 py-0.5 rounded-full border border-cyber-green/40 font-semibold">ASEAN & Google</span>
+                <span class="text-cyber-muted">22 Mar 2026</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">AI Ready ASEAN (15 Modules)</h3>
+              <p class="text-xs font-mono text-cyber-muted">ASEAN Foundation with Google.org</p>
+              <p class="text-xs text-slate-200">เรียนรู้สำเร็จทั้ง 15 โมดูล ครอบคลุม Generative AI, Prompt Engineering 101, Data Privacy และ AI Safety</p>
+            </div>
+            <a href="certificate.pdf" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-pink bg-cyber-pink/15 px-2.5 py-0.5 rounded-full border border-cyber-pink/40 font-semibold">FutureSkill</span>
+                <span class="text-cyber-muted">26 Feb 2025</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Advanced Reports with Power BI</h3>
+              <p class="text-xs font-mono text-cyber-muted">FutureSkill</p>
+              <p class="text-xs text-slate-200">พิชิตการตลาดและงานขาย หา Insight สบายๆ ด้วย Advance Report จาก Power BI</p>
+            </div>
+            <a href="20250226_Insight_Advanced_Report_PowerBI_Chanont.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-pink bg-cyber-pink/15 px-2.5 py-0.5 rounded-full border border-cyber-pink/40 font-semibold">FutureSkill</span>
+                <span class="text-cyber-muted">28 Jan 2025</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Data Storytelling</h3>
+              <p class="text-xs font-mono text-cyber-muted">FutureSkill</p>
+              <p class="text-xs text-slate-200">นำเสนอข้อมูลให้น่าสนใจ อย่างตรงประเด็นและมีประสิทธิภาพด้วย Data Storytelling</p>
+            </div>
+            <a href="20250128_Data_Storytelling_Chanont.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-pink bg-cyber-pink/15 px-2.5 py-0.5 rounded-full border border-cyber-pink/40 font-semibold">FutureSkill</span>
+                <span class="text-cyber-muted">24 Jan 2025</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Data Analytics for Business</h3>
+              <p class="text-xs font-mono text-cyber-muted">FutureSkill</p>
+              <p class="text-xs text-slate-200">การวิเคราะห์ข้อมูลเพื่อประกอบการตัดสินใจทางธุรกิจ</p>
+            </div>
+            <a href="20250124_Data_analytics_for_Business_Chanont.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-pink bg-cyber-pink/15 px-2.5 py-0.5 rounded-full border border-cyber-pink/40 font-semibold">FutureSkill</span>
+                <span class="text-cyber-muted">12 Jan 2025</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Excel for Business Professional</h3>
+              <p class="text-xs font-mono text-cyber-muted">FutureSkill</p>
+              <p class="text-xs text-slate-200">เจาะลึกการใช้ Excel เพื่อธุรกิจแบบมืออาชีพ</p>
+            </div>
+            <a href="20241218_Excel_for_Business_Chanont.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-pink bg-cyber-pink/15 px-2.5 py-0.5 rounded-full border border-cyber-pink/40 font-semibold">FutureSkill</span>
+                <span class="text-cyber-muted">22 Dec 2024</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Power Query for Power BI</h3>
+              <p class="text-xs font-mono text-cyber-muted">FutureSkill</p>
+              <p class="text-xs text-slate-200">การใช้เครื่องมือ Power Query ปรับแต่งข้อมูลใน Power BI</p>
+            </div>
+            <a href="20241222_Power_Query_Chanont.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+          <article class="cert-card cert-data glass-panel p-6 rounded-2xl glass-panel-hover space-y-4 flex flex-col justify-between">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-cyber-pink bg-cyber-pink/15 px-2.5 py-0.5 rounded-full border border-cyber-pink/40 font-semibold">FutureSkill</span>
+                <span class="text-cyber-muted">18 Dec 2024</span>
+              </div>
+              <h3 class="font-display font-bold text-lg text-white">Excel Advance: Macro & VBA Automation</h3>
+              <p class="text-xs font-mono text-cyber-muted">FutureSkill</p>
+              <p class="text-xs text-slate-200">เจาะลึกเทคนิคการทำงานให้ง่ายขึ้นด้วย Macro และ VBA</p>
+            </div>
+            <a href="20241218_Excel_Advance_Macro_VBA_Chanont.png" target="_blank" class="text-xs font-mono text-cyber-cyan hover:underline inline-flex items-center gap-1.5 pt-3 border-t border-white/10 font-bold">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open verified cert ↗
+            </a>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <section id="contact" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10 pointer-events-auto">
+      <div class="space-y-10">
+        
+        <div class="space-y-3">
+          <div class="text-xs font-mono text-cyber-cyan uppercase tracking-widest flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
+            06 / Contact & Terminal Initiation
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+            Let’s Improve Network Experience <span class="text-cyber-cyan glow-cyan">with Evidence.</span>
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 font-mono text-xs">
+          
+          <a href="tel:+66982852659" class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-2 block" onclick="playCyberSound('click')">
+            <div class="flex items-center justify-between text-cyber-cyan">
+              <span>Phone</span>
+              <i data-lucide="phone" class="w-4 h-4"></i>
+            </div>
+            <strong class="text-white text-sm block">+66 98-285-2659</strong>
+          </a>
+
+          <button type="button" onclick="copyEmail('chanon.wankaew@icloud.com')" class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-2 text-left w-full">
+            <div class="flex items-center justify-between text-cyber-cyan">
+              <span>Email</span>
+              <span id="copy-badge" class="text-[10px] bg-cyber-cyan/15 px-2 py-0.5 rounded border border-cyber-cyan/40 font-bold">Copy</span>
+            </div>
+            <strong class="text-white text-sm block truncate">chanon.wankaew@icloud.com</strong>
+          </button>
+
+          <a href="https://www.linkedin.com/in/chanont-wankaew" target="_blank" rel="noreferrer" class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-2 block" onclick="playCyberSound('click')">
+            <div class="flex items-center justify-between text-cyber-cyan">
+              <span>LinkedIn</span>
+              <i data-lucide="linkedin" class="w-4 h-4"></i>
+            </div>
+            <strong class="text-white text-sm block">chanont-wankaew</strong>
+          </a>
+
+          <a href="Chanont_Wankaew_Resume.pdf" download class="glass-panel p-6 rounded-2xl glass-panel-hover space-y-2 block" onclick="playCyberSound('click')">
+            <div class="flex items-center justify-between text-cyber-cyan">
+              <span>Resume</span>
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+            </div>
+            <strong class="text-white text-sm block">Download PDF</strong>
+          </a>
+
+        </div>
+
+        <div class="glass-panel hud-bracket rounded-2xl overflow-hidden border-cyber-cyan/40 shadow-2xl">
+          <div class="bg-black/85 px-4.5 py-3 border-b border-white/10 flex items-center justify-between font-mono text-xs text-cyber-muted">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+              <span class="ml-2 font-bold text-slate-200">chanont-wankaew-terminal ~ v3.5 (Active)</span>
+            </div>
+            <span class="text-[10px] text-cyber-cyan font-bold">CLI System Online</span>
+          </div>
+
+          <div class="p-6 font-mono text-xs space-y-4">
+            <div id="terminal-logs" class="space-y-2 text-slate-300 max-h-52 overflow-y-auto">
+              <p class="text-cyber-cyan">System initialized with 100% verified credentials. Type <span class="text-white font-bold">'help'</span> or click action chips below.</p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2 border-t border-white/10">
+              <span class="text-cyber-green font-bold">&gt;</span>
+              <input type="text" id="terminal-input" placeholder="Type a command (e.g., help, certs, skills, contact)..." class="bg-transparent text-white focus:outline-none w-full font-mono text-xs" onkeydown="handleTerminalCommand(event)">
+            </div>
+
+            <div class="flex flex-wrap gap-2 pt-1 text-[11px]">
+              <button onclick="runCommand('help')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition font-bold">help</button>
+              <button onclick="runCommand('certs')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition font-bold">certs</button>
+              <button onclick="runCommand('skills')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition font-bold">skills</button>
+              <button onclick="runCommand('whoami')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition font-bold">whoami</button>
+              <button onclick="runCommand('contact')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 transition font-bold">contact</button>
+              <button onclick="runCommand('clear')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyber-muted border border-white/10 transition">clear</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <footer class="py-8 px-4 sm:px-8 border-t border-white/10 text-xs font-mono text-cyber-muted pointer-events-auto">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <a href="Chanont_Wankaew_Resume.pdf" download class="hover:text-cyber-cyan transition flex items-center gap-1 font-bold">
+          <i data-lucide="file-down" class="w-4 h-4"></i> Download CV PDF
+        </a>
+        
+        <p class="text-center">
+          © 2026 Chanont Wankaew · Telecom Data Analytics · RF Optimization · CEM Focus
+        </p>
+
+        <a href="#top" class="hover:text-cyber-cyan transition flex items-center gap-1 font-bold" onclick="playCyberSound('click')">
+          Back to top ↑
+        </a>
+      </div>
+    </footer>
+
+  </div>
+
+  <div id="trace-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+    <div class="glass-panel border-cyber-cyan/50 max-w-xl w-full rounded-2xl p-6 space-y-5 shadow-2xl relative hud-bracket">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 id="modal-title" class="font-display font-bold text-lg text-white">Live Trace Metrics</h3>
+        <button onclick="closeTraceModal()" class="p-1 rounded-lg hover:bg-white/10 text-cyber-muted hover:text-white">✕</button>
+      </div>
+      <div class="space-y-3 font-mono text-xs">
+        <div class="p-3 bg-cyber-cyan/10 border border-cyber-cyan/30 rounded-xl space-y-1">
+          <span class="text-cyber-cyan font-bold block">PRIMARY KPI TRACE</span>
+          <p id="modal-metric1" class="text-white text-sm font-semibold">99.4% Call Success Rate</p>
+        </div>
+        <div class="p-3 bg-cyber-green/10 border border-cyber-green/30 rounded-xl space-y-1">
+          <span class="text-cyber-green font-bold block">COVERAGE & QUALITY METRIC</span>
+          <p id="modal-metric2" class="text-white text-sm font-semibold">RSRP > -92dBm (94.2% Area)</p>
+        </div>
+      </div>
+      <button onclick="closeTraceModal()" class="w-full py-2.5 rounded-xl bg-cyber-cyan text-black font-bold text-xs hover:bg-white transition">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast-popup glass-panel border-cyber-green/60 text-cyber-green px-5 py-3 rounded-xl font-mono text-xs shadow-2xl flex items-center gap-2">
+    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+    <span id="toast-message">Copied to clipboard</span>
+  </div>
+
+
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toast-message');
+      if (toast && msgEl) {
+        msgEl.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2800);
+      }
+    }
+
+    function openTraceModal(title, m1, m2) {
+      playCyberSound('click');
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-metric1').innerText = m1;
+      document.getElementById('modal-metric2').innerText = m2;
+      document.getElementById('trace-modal').classList.remove('hidden');
+    }
+
+    function closeTraceModal() {
+      document.getElementById('trace-modal').classList.add('hidden');
+    }
+
+    function filterEvidence(category) {
+      playCyberSound('click');
+      const cards = document.querySelectorAll('.ev-card');
+      const buttons = {
+        all: document.getElementById('btn-ev-all'),
+        dta: document.getElementById('btn-ev-dta'),
+        worst: document.getElementById('btn-ev-worst'),
+        kpi: document.getElementById('btn-ev-kpi'),
+        consolidation: document.getElementById('btn-ev-consolidation'),
+        oss: document.getElementById('btn-ev-oss')
+      };
+
+      Object.values(buttons).forEach(btn => {
+        if (btn) btn.className = 'px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition';
+      });
+
+      if (buttons[category]) {
+        buttons[category].className = 'px-3.5 py-2 rounded-xl bg-cyber-cyan text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)] transition';
+      }
+
+      cards.forEach(c => {
+        if (category === 'all' || c.classList.contains(`ev-${category}`)) {
+          c.style.display = 'block';
+        } else {
+          c.style.display = 'none';
+        }
+      });
+    }
+
+    function filterCerts(category) {
+      playCyberSound('click');
+      const certs = document.querySelectorAll('.cert-card');
+      const btnAll = document.getElementById('btn-cert-all');
+      const btnAi = document.getElementById('btn-cert-ai');
+      const btnData = document.getElementById('btn-cert-data');
+
+      [btnAll, btnAi, btnData].forEach(btn => {
+        if (btn) btn.className = 'px-3.5 py-2 rounded-xl glass-panel text-slate-300 hover:text-white transition';
+      });
+
+      if (category === 'all') {
+        if (btnAll) btnAll.className = 'px-3.5 py-2 rounded-xl bg-cyber-cyan text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)] transition';
+        certs.forEach(c => c.style.display = 'flex');
+      } else if (category === 'ai') {
+        if (btnAi) btnAi.className = 'px-3.5 py-2 rounded-xl bg-cyber-purple text-white font-bold shadow-[0_0_15px_rgba(139,92,246,0.3)] transition';
+        certs.forEach(c => {
+          c.style.display = c.classList.contains('cert-ai') ? 'flex' : 'none';
+        });
+      } else if (category === 'data') {
+        if (btnData) btnData.className = 'px-3.5 py-2 rounded-xl bg-cyber-pink text-white font-bold shadow-[0_0_15px_rgba(255,0,122,0.3)] transition';
+        certs.forEach(c => {
+          c.style.display = c.classList.contains('cert-data') ? 'flex' : 'none';
+        });
+      }
+    }
+
+    let soundEnabled = false;
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      if (soundEnabled) {
+        if (icon) icon.setAttribute('data-lucide', 'volume-2');
+        playCyberSound('click');
+        showToast('🔊 เปิดใช้งาน Cyber Sound FX');
+      } else {
+        if (icon) icon.setAttribute('data-lucide', 'volume-x');
+        showToast('🔇 ปิดเสียง');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function playCyberSound(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(850, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.06);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.06);
+        } else if (type === 'burst') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1200, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.25);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        }
+      } catch(e){}
+    }
+
+    function copyEmail(email) {
+      playCyberSound('click');
+      const badge = document.getElementById('copy-badge');
+      
+      const el = document.createElement('textarea');
+      el.value = email;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+
+      showToast('✓ คัดลอกอีเมลเรียบร้อยแล้ว: ' + email);
+
+      if (badge) {
+        badge.innerText = 'COPIED!';
+        badge.className = 'text-[10px] bg-cyber-green/20 text-cyber-green px-2 py-0.5 rounded border border-cyber-green/40 font-bold';
+        setTimeout(() => {
+          badge.innerText = 'Copy';
+          badge.className = 'text-[10px] bg-cyber-cyan/15 px-2 py-0.5 rounded border border-cyber-cyan/40 font-bold';
+        }, 2000);
+      }
+    }
+
+
+    /* -------------------------------------------------------------
+       THREE.JS ENGINE WITH CURSOR SIGNAL EMITTER & BEAMFORMING
+       ------------------------------------------------------------- */
+    const canvas = document.getElementById('bg-canvas');
+    let renderer, scene, camera, controls, clock;
+    let gridPlaneGeo, particlePoints, beaconGlobeMesh;
+    let isOrbitEnabled = false;
+    let isCursorEmitterActive = true;
+
+    let mouse2D = new THREE.Vector2(-999, -999);
+    let cursorWorldPos = new THREE.Vector3(0, 0, 0);
+    let planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    let raycaster = new THREE.Raycaster();
+
+    let cursorWavesGroup;
+    let cursorWaveRings = [];
+    let cursorBeamsGroup, laserToTowerMesh;
+
+    let particleCount = 1000;
+    let mouseX = 0, mouseY = 0;
+
+    function toggleCursorEmitter() {
+      isCursorEmitterActive = !isCursorEmitterActive;
+      const label = document.getElementById('emitter-label');
+      if (cursorWavesGroup) cursorWavesGroup.visible = isCursorEmitterActive;
+      if (cursorBeamsGroup) cursorBeamsGroup.visible = isCursorEmitterActive;
+      if (isCursorEmitterActive) {
+        if (label) label.innerText = 'Cursor Waves: ON';
+        showToast('📡 เปิดการส่งคลื่น 3D ตามเคอร์เซอร์เมาส์');
+      } else {
+        if (label) label.innerText = 'Cursor Waves: OFF';
+        showToast('⏸️ ปิดระบบ Cursor Emitter');
+      }
+    }
+
+    function toggleOrbitControls() {
+      isOrbitEnabled = !isOrbitEnabled;
+      const label = document.getElementById('orbit-label');
+      if (controls) controls.enabled = isOrbitEnabled;
+      if (isOrbitEnabled) {
+        if (label) label.innerText = 'Orbit: ACTIVE';
+        showToast('🔄 เปิดโหมดหมุนดูเสา 3D แบบ 360 องศา (กดลากเมาส์ได้)');
+      } else {
+        if (label) label.innerText = 'Orbit: OFF';
+        showToast('🎯 ปิดโหมด 360° Orbit');
+      }
+    }
+
+    function triggerCursorBurst(e) {
+      playCyberSound('burst');
+      showToast('⚡ 5G Burst Shockwave Dispatched!');
+
+      const burstRingGeo = new THREE.RingGeometry(0.2, 0.5, 64);
+      const burstRingMat = new THREE.MeshBasicMaterial({
+        color: 0x00ff88,
+        transparent: true,
+        opacity: 1.0,
+        side: THREE.DoubleSide
+      });
+      const burstRing = new THREE.Mesh(burstRingGeo, burstRingMat);
+      burstRing.position.copy(cursorWorldPos);
+      burstRing.position.z += 0.2;
+      scene.add(burstRing);
+
+      let scale = 1.0;
+      const burstAnim = () => {
+        scale += 0.8;
+        burstRing.scale.set(scale, scale, scale);
+        burstRingMat.opacity -= 0.04;
+        if (burstRingMat.opacity > 0) {
+          requestAnimationFrame(burstAnim);
+        } else {
+          scene.remove(burstRing);
+        }
+      };
+      burstAnim();
+    }
+
+    function buildTower() {
+      const towerGroup = new THREE.Group();
+
+      const steelMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.85, roughness: 0.2 });
+      const antennaBodyMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+      const antennaActiveMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 1.3 });
+      const dishMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.6, roughness: 0.2 });
+      const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff007a });
+
+      const baseGeo = new THREE.BoxGeometry(4.8, 0.6, 4.8);
+      const baseMesh = new THREE.Mesh(baseGeo, new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      baseMesh.position.y = -8.3;
+      towerGroup.add(baseMesh);
+
+      const towerHeight = 22;
+      const bottomWidth = 3.6;
+      const topWidth = 1.2;
+      const numBays = 11;
+      const bayHeight = towerHeight / numBays;
+
+      const legGeo = new THREE.CylinderGeometry(0.06, 0.09, towerHeight, 8);
+      const angles = [Math.PI/4, 3*Math.PI/4, 5*Math.PI/4, 7*Math.PI/4];
+
+      angles.forEach(ang => {
+        const legMesh = new THREE.Mesh(legGeo, steelMat);
+        const rBottom = bottomWidth / Math.sqrt(2);
+        const rTop = topWidth / Math.sqrt(2);
+        const xBottom = Math.cos(ang) * rBottom;
+        const zBottom = Math.sin(ang) * rBottom;
+        const xTop = Math.cos(ang) * rTop;
+        const zTop = Math.sin(ang) * rTop;
+        
+        legMesh.position.set((xBottom + xTop)/2, 2.7, (zBottom + zTop)/2);
+        const dx = xTop - xBottom;
+        const dz = zTop - zBottom;
+        legMesh.rotation.z = Math.atan2(-dx, towerHeight);
+        legMesh.rotation.x = Math.atan2(dz, towerHeight);
+        towerGroup.add(legMesh);
+      });
+
+      for (let i = 0; i <= numBays; i++) {
+        const y = -8 + i * bayHeight;
+        const t = i / numBays;
+        const currentWidth = bottomWidth * (1 - t) + topWidth * t;
+        const halfW = currentWidth / 2;
+
+        const ringGeo = new THREE.BoxGeometry(0.04, 0.04, currentWidth);
+        const north = new THREE.Mesh(ringGeo, steelMat); north.position.set(0, y, halfW); towerGroup.add(north);
+        const south = new THREE.Mesh(ringGeo, steelMat); south.position.set(0, y, -halfW); towerGroup.add(south);
+        const east = new THREE.Mesh(new THREE.BoxGeometry(currentWidth, 0.04, 0.04), steelMat); east.position.set(halfW, y, 0); towerGroup.add(east);
+        const west = new THREE.Mesh(new THREE.BoxGeometry(currentWidth, 0.04, 0.04), steelMat); west.position.set(-halfW, y, 0); towerGroup.add(west);
+
+        if (i < numBays) {
+          const nextY = -8 + (i + 1) * bayHeight;
+          const nextWidth = bottomWidth * (1 - (i+1)/numBays) + topWidth * ((i+1)/numBays);
+          const nextHalfW = nextWidth / 2;
+          const diagLength = Math.sqrt(Math.pow(currentWidth + nextWidth, 2)/4 + Math.pow(bayHeight, 2));
+          const diagGeo = new THREE.CylinderGeometry(0.025, 0.025, diagLength, 6);
+
+          const d1 = new THREE.Mesh(diagGeo, steelMat); d1.position.set(0, (y + nextY)/2, (halfW + nextHalfW)/2); d1.rotation.z = Math.atan2(bayHeight, halfW + nextHalfW); towerGroup.add(d1);
+          const d2 = new THREE.Mesh(diagGeo, steelMat); d2.position.set(0, (y + nextY)/2, (halfW + nextHalfW)/2); d2.rotation.z = -Math.atan2(bayHeight, halfW + nextHalfW); towerGroup.add(d2);
+          const d3 = new THREE.Mesh(diagGeo, steelMat); d3.position.set((halfW + nextHalfW)/2, (y + nextY)/2, 0); d3.rotation.x = Math.atan2(bayHeight, halfW + nextHalfW); towerGroup.add(d3);
+          const d4 = new THREE.Mesh(diagGeo, steelMat); d4.position.set((halfW + nextHalfW)/2, (y + nextY)/2, 0); d4.rotation.x = -Math.atan2(bayHeight, halfW + nextHalfW); towerGroup.add(d4);
+        }
+      }
+
+      const createDish = (x, y, z, rotY) => {
+        const d = new THREE.Group(); d.position.set(x,y,z); d.rotation.y = rotY;
+        const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.4, 24), dishMat); drum.rotation.x = Math.PI / 2; d.add(drum);
+        const cover = new THREE.Mesh(new THREE.CircleGeometry(0.65, 24), new THREE.MeshStandardMaterial({ color: 0xffffff })); cover.position.z = 0.21; d.add(cover);
+        return d;
+      };
+      towerGroup.add(createDish(1.2, 4.2, 0.5, Math.PI / 4));
+      towerGroup.add(createDish(-1.1, 2.5, -0.6, -Math.PI * 0.75));
+
+      const topY = 11.5;
+      const triRadius = 1.8;
+      const headframeGroup = new THREE.Group();
+      headframeGroup.position.y = topY;
+
+      [0, Math.PI * 2 / 3, Math.PI * 4 / 3].forEach((secAngle) => {
+        const sector = new THREE.Group(); sector.rotation.y = secAngle;
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.2, 8), steelMat); pipe.position.set(0, 0, triRadius * 0.95); sector.add(pipe);
+
+        const ant1 = new THREE.Mesh(new THREE.BoxGeometry(0.32, 2.2, 0.18), antennaBodyMat); ant1.position.set(-0.45, 0.2, triRadius * 0.98); sector.add(ant1);
+        const ant1Active = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.1, 0.02), antennaActiveMat); ant1Active.position.set(-0.45, 0.2, triRadius * 0.99); sector.add(ant1Active);
+
+        const ant2 = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.2, 0.22), antennaBodyMat); ant2.position.set(0.45, -0.1, triRadius * 0.98); sector.add(ant2);
+        const ant2Active = new THREE.Mesh(new THREE.BoxGeometry(0.44, 1.1, 0.02), antennaActiveMat); ant2Active.position.set(0.45, -0.1, triRadius * 0.99); sector.add(ant2Active);
+
+        headframeGroup.add(sector);
+      });
+      towerGroup.add(headframeGroup);
+
+      const beaconGlobe = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), beaconMat);
+      beaconGlobe.position.set(0, topY + 0.55, 0);
+      towerGroup.add(beaconGlobe);
+
+      return { towerGroup, beaconGlobe };
+    }
+
+    function init3DEngine() {
+      if (!window.THREE || !canvas) return;
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 2, 24);
+
+      if (window.THREE.OrbitControls) {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enabled = false;
+      }
+
+      scene.add(new THREE.AmbientLight(0x172033, 1.5));
+      const dirLight = new THREE.DirectionalLight(0x00F0FF, 1.6);
+      dirLight.position.set(-8, 12, 10);
+      scene.add(dirLight);
+
+      const pointLight = new THREE.PointLight(0xFF007A, 3.0, 80);
+      pointLight.position.set(9, 6, 2);
+      scene.add(pointLight);
+
+      const { towerGroup, beaconGlobe } = buildTower();
+      beaconGlobeMesh = beaconGlobe;
+      towerGroup.position.set(8.5, -6.5, -5);
+      towerGroup.rotation.y = -Math.PI / 6;
+      scene.add(towerGroup);
+
+      cursorWavesGroup = new THREE.Group();
+      cursorWaveRings = [];
+      for (let i = 0; i < 5; i++) {
+        const ringGeo = new THREE.RingGeometry(0.3, 0.38, 64);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: i % 2 === 0 ? 0x00F0FF : 0x00FF88,
+          transparent: true,
+          opacity: 0.8,
+          side: THREE.DoubleSide
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        cursorWavesGroup.add(ringMesh);
+        cursorWaveRings.push({ mesh: ringMesh, phase: i * 0.2 });
+      }
+      scene.add(cursorWavesGroup);
+
+      cursorBeamsGroup = new THREE.Group();
+      const laserGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(8.5, 5, -5)]);
+      const laserMat = new THREE.LineBasicMaterial({ color: 0x00F0FF, transparent: true, opacity: 0.5 });
+      laserToTowerMesh = new THREE.Line(laserGeo, laserMat);
+      cursorBeamsGroup.add(laserToTowerMesh);
+      scene.add(cursorBeamsGroup);
+
+      initParticles();
+
+      gridPlaneGeo = new THREE.PlaneGeometry(70, 45, 56, 36);
+      const gridPlaneMat = new THREE.MeshBasicMaterial({
+        color: 0x00F0FF,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.14
+      });
+      const gridPlaneMesh = new THREE.Mesh(gridPlaneGeo, gridPlaneMat);
+      gridPlaneMesh.rotation.x = -Math.PI / 2;
+      gridPlaneMesh.position.y = -10;
+      scene.add(gridPlaneMesh);
+
+      clock = new THREE.Clock();
+      renderer.render(scene, camera);
+      animate3D();
+    }
+
+    function initParticles() {
+      if (!scene) return;
+      if (particlePoints) scene.remove(particlePoints);
+      
+      const pos = new Float32Array(particleCount * 3);
+      const col = new Float32Array(particleCount * 3);
+      const palette = [new THREE.Color(0x00F0FF), new THREE.Color(0x8B5CF6), new THREE.Color(0x00FF88), new THREE.Color(0xFF007A)];
+
+      for (let i = 0; i < particleCount; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * 70;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * 45;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        col[i * 3] = color.r;
+        col[i * 3 + 1] = color.g;
+        col[i * 3 + 2] = color.b;
+      }
+
+      const particleGeo = new THREE.BufferGeometry();
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      particleGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+
+      const particleMat = new THREE.PointsMaterial({
+        size: 0.13,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      particlePoints = new THREE.Points(particleGeo, particleMat);
+      scene.add(particlePoints);
+    }
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      if (!renderer || !scene || !camera) return;
+
+      const t = clock.getElapsedTime();
+
+      if (controls && controls.enabled) {
+        controls.update();
+      } else {
+        camera.position.x += (mouseX * 3 - camera.position.x) * 0.025;
+        camera.position.y += (-mouseY * 2 + 2 - camera.position.y) * 0.025;
+        camera.lookAt(0, 1.5, 0);
+      }
+
+      if (isCursorEmitterActive && mouse2D.x !== -999) {
+        raycaster.setFromCamera(mouse2D, camera);
+        raycaster.ray.intersectPlane(planeZ, cursorWorldPos);
+        cursorWavesGroup.position.copy(cursorWorldPos);
+        
+        const positions = laserToTowerMesh.geometry.attributes.position.array;
+        positions[0] = cursorWorldPos.x;
+        positions[1] = cursorWorldPos.y;
+        positions[2] = cursorWorldPos.z;
+        positions[3] = 8.5;
+        positions[4] = 11.5;
+        positions[5] = -5;
+        laserToTowerMesh.geometry.attributes.position.needsUpdate = true;
+      }
+
+      if (isCursorEmitterActive) {
+        cursorWaveRings.forEach(({ mesh, phase }) => {
+          const progress = (t * 0.8 + phase) % 1;
+          const scale = 0.5 + progress * 8;
+          mesh.scale.setScalar(scale);
+          mesh.material.opacity = Math.max(0, 0.8 * (1 - progress));
+          mesh.lookAt(camera.position);
+        });
+      }
+
+      if (beaconGlobeMesh) {
+        const beaconPulse = (Math.sin(t * 6) + 1) / 2;
+        beaconGlobeMesh.material.color.setHSL(0.95, 1.0, 0.2 + beaconPulse * 0.4);
+      }
+
+      if (particlePoints) {
+        particlePoints.rotation.y = t * 0.018;
+        particlePoints.rotation.x = Math.sin(t * 0.12) * 0.04;
+      }
+
+      if (gridPlaneGeo) {
+        const positions = gridPlaneGeo.attributes.position;
+        for (let i = 0; i < positions.count; i++) {
+          const x = positions.getX(i);
+          const y = positions.getY(i);
+          
+          let z = Math.sin(x * 0.23 + t * 1.2) * 0.7 + Math.cos(y * 0.28 + t * 0.9) * 0.45;
+          
+          if (isCursorEmitterActive) {
+            const dx = x - cursorWorldPos.x;
+            const dy = y - cursorWorldPos.y; 
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 10) {
+              const ripple = Math.sin(dist * 2 - t * 10) * (10 - dist) * 0.15;
+              z += ripple;
+            }
+          }
+          positions.setZ(i, z);
+        }
+        positions.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('pointermove', (e) => {
+      mouseX = e.clientX / window.innerWidth - 0.5;
+      mouseY = e.clientY / window.innerHeight - 0.5;
+
+      mouse2D.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse2D.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    window.addEventListener('resize', () => {
+      if (!renderer || !camera) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init3DEngine);
+    } else {
+      init3DEngine();
+    }
+
+
+    /* -------------------------------------------------------------
+       INTERACTIVE AI TERMINAL CLI LOGIC
+       ------------------------------------------------------------- */
+    function handleTerminalCommand(e) {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('terminal-input');
+        const cmd = input.value.trim().toLowerCase();
+        runCommand(cmd);
+        input.value = '';
+      }
+    }
+
+    function runCommand(cmd) {
+      const logs = document.getElementById('terminal-logs');
+      playCyberSound('click');
+
+      const cmdPara = document.createElement('p');
+      cmdPara.className = 'text-cyber-green font-bold';
+      cmdPara.innerText = `> ${cmd}`;
+      logs.appendChild(cmdPara);
+
+      const resPara = document.createElement('p');
+      resPara.className = 'text-slate-200';
+
+      switch(cmd) {
+        case 'help':
+          resPara.innerText = "Available commands: 'help', 'certs', 'skills', 'whoami', 'contact', 'resume', 'clear'";
+          break;
+        case 'whoami':
+          resPara.innerText = "Chanont Wankaew (ชาณณฑ์ แว่นแก้ว) | Senior Telecom Data Analyst & AI Solutions Specialist | 10+ Yrs RAN/RF & Huawei Experience";
+          break;
+        case 'certs':
+          resPara.innerText = "11 Verified Certs: Super AI S6 (Theory, Practitioner, Hackathon), Chula MOOC Python for Data Science, AI Ready ASEAN (15 Modules), Power BI Advanced, Data Storytelling, Business Analytics, Excel VBA, Power Query.";
+          break;
+        case 'skills':
+          resPara.innerText = "Core Skills: RAN/RF Planning, 3G/4G/5G NR, Python (Pandas/NumPy), SQL, Power BI, RAG, FastAPI, Docker, Huawei U2000/PRS, GENEX, Actix, TEMS";
+          break;
+        case 'contact':
+          resPara.innerText = "Email: chanon.wankaew@icloud.com | Phone: +66 98-285-2659 | Location: Sattahip, Chonburi / BMA | LinkedIn: chanont-wankaew";
+          break;
+        case 'resume':
+          resPara.innerText = "Downloading Resume PDF...";
+          window.location.href = 'Chanont_Wankaew_Resume.pdf';
+          break;
+        case 'clear':
+          logs.innerHTML = '';
+          return;
+        default:
+          resPara.innerText = `Command not recognized: '${cmd}'. Type 'help' for options.`;
+      }
+      logs.appendChild(resPara);
+      logs.scrollTop = logs.scrollHeight;
+    }
+  </script>
+</body>
+</html>
