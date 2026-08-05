@@ -15,6 +15,10 @@ export const metadata: Metadata = {
     'Thailand Telecom Engineer',
   ],
   authors: [{ name: 'Chanont Wankaew' }],
+  icons: {
+    icon: "/cw-icon.jpg",
+    apple: "/cw-icon.jpg",
+  },
 };
 
 export default function RootLayout({
