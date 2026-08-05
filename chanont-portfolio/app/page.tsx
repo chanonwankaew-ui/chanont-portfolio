@@ -16,7 +16,7 @@ import {
   ExternalLink,
   Phone,
   Mail,
-  Linkedin,
+
   FileText,
   FileDown,
   CheckCircle2,
@@ -531,19 +531,19 @@ export default function App() {
 
   return (
     <div className="bg-[#04060A] text-[#F8FAFC] font-sans antialiased selection:bg-[#00F0FF] selection:text-black overflow-x-hidden min-h-screen">
-      <!-- 3D BACKGROUND CANVAS -->
+      {/* 3D BACKGROUND CANVAS */}
       <div className="fixed inset-0 z-0 pointer-events-none w-full h-full">
-        <canvas ref={canvasRef} class="w-full h-full block" />
+        <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
-      <!-- SCANLINE OVERLAY -->
+      {/* SCANLINE OVERLAY */}
       <div className="fixed inset-0 z-0 pointer-events-none bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.2)_51%)] bg-[length:100%_4px] opacity-20" />
 
       <div className="relative z-10">
-        <!-- HEADER / NAVIGATION -->
+        {/* HEADER / NAVIGATION */}
         <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-8">
           <div className="max-w-7xl mx-auto bg-[#0A0F1A]/90 backdrop-blur-xl border border-[#00F0FF]/30 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-2xl">
-            <!-- Brand Identity -->
+            {/* Brand Identity */}
             <a
               href="#top"
               onClick={() => playCyberSound('click')}
@@ -566,7 +566,7 @@ export default function App() {
               </div>
             </a>
 
-            <!-- Navigation Links -->
+            {/* Navigation Links */}
             <nav className="hidden lg:flex items-center gap-1 font-mono text-xs">
               <a
                 href="#capabilities"
@@ -612,7 +612,7 @@ export default function App() {
               </a>
             </nav>
 
-            <!-- System Controls -->
+            {/* System Controls */}
             <div className="flex items-center gap-2.5">
               <button
                 type="button"
@@ -648,7 +648,7 @@ export default function App() {
           </div>
         </header>
 
-        <!-- HERO SECTION -->
+        {/* HERO SECTION */}
         <section id="top" className="relative min-h-screen pt-32 pb-20 px-4 sm:px-8 flex items-center justify-center">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 space-y-6">
@@ -708,7 +708,7 @@ export default function App() {
                   <dd className="text-2xl font-bold text-white mt-1">3G – 5G NR</dd>
                 </div>
                 <div className="bg-[#0A0F1A]/90 p-4 rounded-xl border border-white/15">
-                  <dt class="text-[11px] text-[#718096] uppercase">Vendor Domain</dt>
+                  <dt className="text-[11px] text-[#718096] uppercase">Vendor Domain</dt>
                   <dd className="text-2xl font-bold text-white mt-1">Huawei TH</dd>
                 </div>
                 <div className="bg-[#0A0F1A]/90 p-4 rounded-xl border border-[#8B5CF6]/40">
@@ -718,7 +718,7 @@ export default function App() {
               </dl>
             </div>
 
-            <!-- Recruiter Fast-Path -->
+            {/* Recruiter Fast-Path */}
             <div className="lg:col-span-4 bg-[#0A0F1A]/90 p-6 sm:p-7 rounded-2xl border border-[#00F0FF]/40 space-y-5 shadow-2xl relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
                 <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
@@ -752,7 +752,7 @@ export default function App() {
               <div className="pt-3 border-t border-white/10 flex flex-wrap gap-2 text-xs font-mono">
                 <a href="#evidence" className="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Worst Cell Case →</a>
                 <span className="text-white/20">•</span>
-                <a href="Chanont_Wankaew_Resume.pdf" download class="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Resume →</a>
+                <a href="Chanont_Wankaew_Resume.pdf" download className="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Resume →</a>
                 <span className="text-white/20">•</span>
                 <a href="#contact" className="text-[#00F0FF] hover:text-white transition flex items-center gap-1 font-bold">Contact →</a>
               </div>
@@ -760,7 +760,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- CAPABILITY MATRIX -->
+        {/* CAPABILITY MATRIX */}
         <section id="capabilities" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-10">
             <div className="space-y-3">
@@ -783,7 +783,7 @@ export default function App() {
                 <ul className="space-y-2 text-xs font-mono text-slate-200">
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />RAN/RF Planning</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />RF Optimization</li>
-                  <li className="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />3G / 4G LTE / 5G NR</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />3G / 4G LTE / 5G NR</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />Drive-Test Analysis (DTA)</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />Worst Cell Remediation</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#00F0FF] rounded-full" />KPI Control (RRC, VoLTE)</li>
@@ -828,7 +828,7 @@ export default function App() {
                 <ul className="space-y-2 text-xs font-mono text-slate-200">
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />Huawei U2000 & PRS</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />GENEX Assistant</li>
-                  <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />Actix Analyzer</li>
+                  <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />Actix Analyzer</li>
                   <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-[#FF007A] rounded-full" />TEMS / Nemo / MapInfo</li>
                 </ul>
               </article>
@@ -836,7 +836,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- ENGINEERING EVIDENCE SECTION -->
+        {/* ENGINEERING EVIDENCE SECTION */}
         <section id="evidence" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -904,7 +904,152 @@ export default function App() {
           </div>
         </section>
 
-        <!-- CREDENTIALS SECTION (11 CERTIFICATES) -->
+        {/* EXPERIENCE SECTION — Employment Timeline */}
+        <section id="experience" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
+          <div className="space-y-10">
+            <div className="space-y-3">
+              <div className="text-xs font-mono text-[#00F0FF] uppercase tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#00F0FF]" />
+                03 / Employment Timeline
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+                A career built from field evidence{' '}
+                <span className="text-[#00F0FF]">to CEM intelligence.</span>
+              </h2>
+            </div>
+
+            <div className="relative pl-6 sm:pl-8 border-l border-white/15 space-y-8">
+              {/* Recent roles — highlighted */}
+              {[
+                { period: 'Jan 2025 – Jun 2025', company: 'Turnkey Communication Services Co., Ltd.', role: 'Senior RF Optimization & Data Analyst', recent: true },
+                { period: 'Jun 2022 – Apr 2023', company: 'Huawei Technologies (Thailand) Co., Ltd.', role: 'OSS Engineer — In-Building Coverage (IBC) Team', recent: true },
+                { period: 'May 2018 – May 2022', company: 'Metro Global Services Co., Ltd.', role: 'Mobile Network RF Planning & Optimization Engineer — Team Lead', recent: true },
+                { period: 'Nov 2017 – Apr 2018', company: 'Turnkey Communication Services Co., Ltd.', role: 'Senior Mobile Network RF Planning & Optimization Engineer (4G)', recent: false },
+                { period: 'Jan 2017 – Sep 2017', company: 'CCS Comservice (Thailand) Limited', role: 'Senior Mobile Network RF Planning & Optimization Engineer (3G / 4G)', recent: false },
+                { period: 'Jul 2016 – Dec 2016', company: 'Huawei Technology (Thailand) Co., Ltd.', role: 'Mobile Network RF Planning & Optimization Engineer (3G / 4G)', recent: false },
+                { period: 'Feb 2016 – Jun 2016', company: 'UbiNS (Thailand) Co., Ltd.', role: 'Mobile Network RF Planning & Optimization Engineer (3G / 4G)', recent: false },
+                { period: 'Nov 2014 – Jan 2016', company: 'Elabram Systems Co., Ltd.', role: 'Junior Mobile Network RF Planning & Optimization Engineer (3G / 4G)', recent: false },
+                { period: 'Jan 2014 – Oct 2014', company: 'TOT Public Co., Ltd.', role: 'Mobile Network Engineer (3G / 4G) — Internship', recent: false },
+              ].map((job, idx) => (
+                <div key={idx} className="relative group">
+                  <span
+                    className={`absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full border-2 transition-colors ${
+                      job.recent
+                        ? 'bg-[#04060A] border-[#00F0FF] group-hover:bg-[#00F0FF] shadow-[0_0_10px_#00F0FF]'
+                        : 'bg-[#04060A] border-slate-600'
+                    }`}
+                  />
+                  <div className="bg-[#0A0F1A]/92 backdrop-blur-xl border border-[#00F0FF]/25 shadow-[0_10px_30px_rgba(0,0,0,0.6)] p-5 rounded-xl space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                      <span className={job.recent ? 'text-[#00F0FF] font-bold' : 'text-slate-400'}>
+                        {job.period}
+                      </span>
+                      <span className={job.recent ? 'text-[#718096]' : 'text-slate-400'}>
+                        {job.company}
+                      </span>
+                    </div>
+                    <h3 className="font-display font-bold text-lg text-white">{job.role}</h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* DEVELOPMENT SECTION — Professional Development & Academic Education */}
+        <section id="development" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
+          <div className="space-y-10">
+            <div className="space-y-3">
+              <div className="text-xs font-mono text-[#00F0FF] uppercase tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#00F0FF]" />
+                04 / Development & Education
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
+                Academic foundations{' '}
+                <span className="text-[#00F0FF]">& continuous AI growth.</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Academic Education */}
+              <div className="bg-[#0A0F1A]/92 backdrop-blur-xl border border-[#00F0FF]/25 shadow-[0_10px_30px_rgba(0,0,0,0.6)] p-6 sm:p-7 rounded-2xl transition-all duration-300 hover:border-[#00F0FF]/65 hover:shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:-translate-y-0.5 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
+                  <h3 className="font-display font-bold text-lg text-white flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-[#00F0FF]" />
+                    Academic Education
+                  </h3>
+                  <span className="text-xs font-mono text-[#00F0FF] font-bold">DEGREE</span>
+                </div>
+                <div className="space-y-4 text-xs font-sans">
+                  <div className="space-y-1">
+                    <strong className="text-white text-sm block">
+                      Bachelor of Engineering (B.Eng.) in Telecommunications Engineering
+                    </strong>
+                    <p className="text-[#718096] font-mono">
+                      Rajamangala University of Technology Thanyaburi (RMUTT)
+                    </p>
+                  </div>
+                  <div className="space-y-1 pt-3 border-t border-white/5">
+                    <strong className="text-white text-sm block">
+                      Higher Technical Certificate in Electrical & Electronics
+                    </strong>
+                    <p className="text-[#718096] font-mono">Thai-Austrian Technical College</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* English Language Mastery */}
+              <div className="bg-[#0A0F1A]/92 backdrop-blur-xl border border-[#00F0FF]/25 shadow-[0_10px_30px_rgba(0,0,0,0.6)] p-6 sm:p-7 rounded-2xl transition-all duration-300 hover:border-[#00F0FF]/65 hover:shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:-translate-y-0.5 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
+                  <h3 className="font-display font-bold text-lg text-white flex items-center gap-2">
+                    <Languages className="w-5 h-5 text-[#00FF88]" />
+                    English Language Mastery
+                  </h3>
+                  <span className="text-xs font-mono text-[#00FF88] font-bold">May 2023 – Dec 2024</span>
+                </div>
+                <ul className="space-y-2.5 text-xs font-mono text-slate-200">
+                  {[
+                    'Professional business communication',
+                    'Technical reading & documentation',
+                    'International team collaboration readiness',
+                    'Historical TOEIC Score: 575',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#00FF88] shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Self-Directed AI Mastery — spans full width */}
+              <div className="bg-[#0A0F1A]/92 backdrop-blur-xl border border-[#00F0FF]/25 shadow-[0_10px_30px_rgba(0,0,0,0.6)] p-6 sm:p-7 rounded-2xl transition-all duration-300 hover:border-[#00F0FF]/65 hover:shadow-[0_0_30px_rgba(0,240,255,0.25)] hover:-translate-y-0.5 space-y-4 md:col-span-2">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
+                  <h3 className="font-display font-bold text-lg text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-[#8B5CF6]" />
+                    Self-Directed AI Mastery & Advanced Research (340+ Days)
+                  </h3>
+                  <span className="text-xs font-mono text-[#8B5CF6] font-bold">June 2024 – Present</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono text-slate-200">
+                  {[
+                    { title: 'Structured Python & Data', desc: 'Chula MOOC Python programming, data structures & analytical workflows.' },
+                    { title: 'Super AI Engineer S6', desc: '13 core domains: ML, Deep Learning, NLP, Computer Vision & RAG.' },
+                    { title: 'AI Hackathons & Practice', desc: 'Online Hackathon "From Data to Insight" practical ML model optimization.' },
+                    { title: 'AI Ready ASEAN & Safety', desc: '15 modules: Prompt engineering 101, Data privacy & AI safety standards.' },
+                  ].map((item) => (
+                    <div key={item.title} className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-1">
+                      <span className="text-white font-bold block">{item.title}</span>
+                      <p className="text-slate-300 font-sans text-[11px]">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CREDENTIALS SECTION (11 CERTIFICATES) */}
         <section id="credentials" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-12">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -943,7 +1088,7 @@ export default function App() {
               </div>
             </div>
 
-            <!-- Credentials Grid -->
+            {/* Credentials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCerts.map((cert) => (
                 <article
@@ -982,7 +1127,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- CONTACT & CLI TERMINAL -->
+        {/* CONTACT & CLI TERMINAL */}
         <section id="contact" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-10">
             <div className="space-y-3">
@@ -991,7 +1136,7 @@ export default function App() {
                 08 / Contact & Initiation
               </div>
               <h2 className="text-3xl sm:text-5xl font-display font-bold text-white tracking-tight">
-                Let’s improve network experience <span class="text-[#00F0FF]">with evidence.</span>
+                Let’s improve network experience <span className="text-[#00F0FF]">with evidence.</span>
               </h2>
             </div>
 
@@ -1016,24 +1161,24 @@ export default function App() {
                 <strong className="text-white text-sm block truncate">chanon.wankaew@icloud.com</strong>
               </button>
 
-              <a href="https://www.linkedin.com/in/chanont-wankaew" target="_blank" rel="noreferrer" class="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
+              <a href="https://www.linkedin.com/in/chanont-wankaew" target="_blank" rel="noreferrer" className="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
                 <div className="flex items-center justify-between text-[#00F0FF]">
                   <span>LinkedIn</span>
-                  <Linkedin className="w-4 h-4" />
+                  <ExternalLink className="w-4 h-4" />
                 </div>
                 <strong className="text-white text-sm block">chanont-wankaew</strong>
               </a>
 
-              <a href="Chanont_Wankaew_Resume.pdf" download class="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
+              <a href="Chanont_Wankaew_Resume.pdf" download className="bg-[#0A0F1A]/90 p-6 rounded-2xl border border-[#00F0FF]/30 space-y-2 block">
                 <div className="flex items-center justify-between text-[#00F0FF]">
                   <span>Resume</span>
                   <FileText className="w-4 h-4" />
                 </div>
-                <strong class="text-white text-sm block">Download PDF</strong>
+                <strong className="text-white text-sm block">Download PDF</strong>
               </a>
             </div>
 
-            <!-- Terminal -->
+            {/* Terminal */}
             <div className="bg-[#0A0F1A]/90 rounded-2xl overflow-hidden border border-[#00F0FF]/40 shadow-2xl font-mono text-xs">
               <div className="bg-black/85 px-4.5 py-3 border-b border-white/10 flex items-center justify-between text-[#718096]">
                 <div className="flex items-center gap-2">
@@ -1088,7 +1233,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- FOOTER -->
+        {/* FOOTER */}
         <footer className="py-8 px-4 sm:px-8 border-t border-white/10 text-xs font-mono text-[#718096]">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <a href="Chanont_Wankaew_Resume.pdf" download className="hover:text-[#00F0FF] transition flex items-center gap-1 font-bold">
@@ -1100,7 +1245,7 @@ export default function App() {
         </footer>
       </div>
 
-      <!-- TOAST POPUP -->
+      {/* TOAST POPUP */}
       {toastMessage && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#0A0F1A]/95 border border-[#00FF88]/60 text-[#00FF88] px-5 py-3 rounded-xl font-mono text-xs shadow-2xl flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4" />
