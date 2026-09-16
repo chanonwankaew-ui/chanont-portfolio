@@ -550,19 +550,19 @@ export default function App() {
 
   return (
     <div className="bg-[#04060A] text-[#F8FAFC] font-sans antialiased selection:bg-[#00F0FF] selection:text-black overflow-x-hidden min-h-screen">
-      <!-- 3D BACKGROUND CANVAS -->
+      {/* 3D BACKGROUND CANVAS */}
       <div className="fixed inset-0 z-0 pointer-events-none w-full h-full">
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
-      <!-- SCANLINE OVERLAY -->
+      {/* SCANLINE OVERLAY */}
       <div className="fixed inset-0 z-0 pointer-events-none bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.2)_51%)] bg-[length:100%_4px] opacity-20" />
 
       <div className="relative z-10">
-        <!-- HEADER / NAVIGATION -->
+        {/* HEADER / NAVIGATION */}
         <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-8">
           <div className="max-w-7xl mx-auto bg-[#0A0F1A]/90 backdrop-blur-xl border border-[#00F0FF]/30 rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-2xl">
-            <!-- Brand Identity -->
+            {/* Brand Identity */}
             <a
               href="#top"
               onClick={() => playCyberSound('click')}
@@ -585,7 +585,7 @@ export default function App() {
               </div>
             </a>
 
-            <!-- Navigation Links -->
+            {/* Navigation Links */}
             <nav className="hidden lg:flex items-center gap-1 font-mono text-xs">
               <a
                 href="#capabilities"
@@ -631,7 +631,7 @@ export default function App() {
               </a>
             </nav>
 
-            <!-- System Controls -->
+            {/* System Controls */}
             <div className="flex items-center gap-2.5">
               <button
                 type="button"
@@ -667,7 +667,7 @@ export default function App() {
           </div>
         </header>
 
-        <!-- HERO SECTION -->
+        {/* HERO SECTION */}
         <section id="top" className="relative min-h-screen pt-32 pb-20 px-4 sm:px-8 flex items-center justify-center">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 space-y-6">
@@ -737,7 +737,7 @@ export default function App() {
               </dl>
             </div>
 
-            <!-- Recruiter Fast-Path -->
+            {/* Recruiter Fast-Path */}
             <div className="lg:col-span-4 bg-[#0A0F1A]/90 p-6 sm:p-7 rounded-2xl border border-[#00F0FF]/40 space-y-5 shadow-2xl relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
                 <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
@@ -779,7 +779,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- CAPABILITY MATRIX -->
+        {/* CAPABILITY MATRIX */}
         <section id="capabilities" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-10">
             <div className="space-y-3">
@@ -855,7 +855,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- ENGINEERING EVIDENCE SECTION -->
+        {/* ENGINEERING EVIDENCE SECTION */}
         <section id="evidence" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -923,7 +923,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- CREDENTIALS SECTION (11 CERTIFICATES) -->
+        {/* CREDENTIALS SECTION (11 CERTIFICATES) */}
         <section id="credentials" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-12">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -962,7 +962,7 @@ export default function App() {
               </div>
             </div>
 
-            <!-- Credentials Grid -->
+            {/* Credentials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCerts.map((cert) => (
                 <article
@@ -1001,7 +1001,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- CONTACT & CLI TERMINAL -->
+        {/* CONTACT & CLI TERMINAL */}
         <section id="contact" className="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-t border-white/10">
           <div className="space-y-10">
             <div className="space-y-3">
@@ -1052,7 +1052,7 @@ export default function App() {
               </a>
             </div>
 
-            <!-- Terminal -->
+            {/* Terminal */}
             <div className="bg-[#0A0F1A]/90 rounded-2xl overflow-hidden border border-[#00F0FF]/40 shadow-2xl font-mono text-xs">
               <div className="bg-black/85 px-4.5 py-3 border-b border-white/10 flex items-center justify-between text-[#718096]">
                 <div className="flex items-center gap-2">
@@ -1107,7 +1107,7 @@ export default function App() {
           </div>
         </section>
 
-        <!-- FOOTER -->
+        {/* FOOTER */}
         <footer className="py-8 px-4 sm:px-8 border-t border-white/10 text-xs font-mono text-[#718096]">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <a href="Chanont_Wankaew_Resume.pdf" download className="hover:text-[#00F0FF] transition flex items-center gap-1 font-bold">
@@ -1119,7 +1119,7 @@ export default function App() {
         </footer>
       </div>
 
-      <!-- TOAST POPUP -->
+      {/* TOAST POPUP */}
       {toastMessage && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#0A0F1A]/95 border border-[#00FF88]/60 text-[#00FF88] px-5 py-3 rounded-xl font-mono text-xs shadow-2xl flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4" />
