@@ -10,3 +10,6 @@
 2. **3D High Performance**: Always set `dpr={[1, 2]}` in Canvas. Use `useFrame` efficiently without memory leaks.
 3. **Thai Comments**: Write code comments and display labels in Thai unless strictly technical identifiers.
 4. **Glassmorphism Design**: Use dark obsidian backgrounds (`#05070B`), neon cyan (`#00F0FF`), purple (`#8B5CF6`), and translucent glass borders.
+
+## Cloudflare Guidelines
+When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file.
