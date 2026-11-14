@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Ring, Line, Sphere, Trail } from '@react-three/drei';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
 // Global state for cursor interaction
 const cursorState = {
@@ -11,6 +12,12 @@ const cursorState = {
   screenPosition: new THREE.Vector2(0, 0),
   isClicking: false,
   clickTime: 0
+};
+
+// Check for reduced motion preference
+const prefersReducedMotion = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 };
 
 // Enhanced 5G Cell Tower with realistic details
@@ -417,12 +424,21 @@ function SignalWaves() {
 }
 
 export default function CellTowerCanvas() {
+  const { metrics, checkDeviceCapabilities } = usePerformanceMonitor();
+  const { isMobile, shouldReduceEffects } = checkDeviceCapabilities();
+  const reducedMotion = prefersReducedMotion();
+
+  // Adjust quality based on device capabilities
+  const pixelRatio = shouldReduceEffects ? 1 : Math.min(window.devicePixelRatio, 2);
+  const antialias = !shouldReduceEffects;
+  const powerPreference = shouldReduceEffects ? 'low-power' : 'high-performance';
+
   return (
     <div className="pointer-events-auto fixed inset-0 z-0" aria-hidden="true">
       <Canvas
         camera={{ position: [0, 2, 24], fov: 55 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        dpr={[1, pixelRatio]}
+        gl={{ antialias, alpha: true, powerPreference }}
       >
         <ambientLight color="#172033" intensity={1.4} />
         <directionalLight color="#00F0FF" intensity={1.3} position={[-8, 12, 10]} />
@@ -433,9 +449,13 @@ export default function CellTowerCanvas() {
         <CellTower />
         <DataOrbs />
         <SignalWaves />
-        <CursorSignalEmitter />
-        <BeamformingLaser />
-        <ClickBurstEffect />
+        {!reducedMotion && !shouldReduceEffects && (
+          <>
+            <CursorSignalEmitter />
+            <BeamformingLaser />
+            <ClickBurstEffect />
+          </>
+        )}
       </Canvas>
     </div>
   );

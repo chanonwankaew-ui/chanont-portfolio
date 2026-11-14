@@ -1,14 +1,14 @@
 'use client';
 
-import CellTowerCanvas from '@/components/3d/CellTowerCanvas';
+import CellTowerCanvasWrapper from '@/components/3d/CellTowerCanvasWrapper';
 import CyberHUD from '@/components/ui/CyberHUD';
 import { Download, UserCheck } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section id="top" className="relative min-h-screen pt-36 pb-24 px-4 sm:px-8 flex items-center justify-center bg-[#05070B] text-slate-100 overflow-hidden">
+    <section id="top" aria-labelledby="hero-heading" className="relative min-h-screen pt-36 pb-24 px-4 sm:px-8 flex items-center justify-center bg-[#05070B] text-slate-100 overflow-hidden">
       {/* 3D WebGL Canvas Layer */}
-      <CellTowerCanvas />
+      <CellTowerCanvasWrapper />
       
       {/* Glassmorphic Cyber HUD */}
       <CyberHUD />
@@ -23,7 +23,7 @@ export default function HeroSection() {
             Telecom Data Analytics · RF Optimization · CEM Focus
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-none tracking-tight">
+          <h1 id="hero-heading" className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-none tracking-tight">
             Engineering signal.<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-emerald-300 to-[#8B5CF6]">
               Intelligent action.

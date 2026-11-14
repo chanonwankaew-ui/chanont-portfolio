@@ -223,7 +223,7 @@ export default function CredentialsSection() {
           </div>
         </div>
 
-        <!-- Credentials Gallery Cards Grid -->
+        {/* Credentials Gallery Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCerts.map((cert) => (
             <article

@@ -1,5 +1,20 @@
 import type { Metadata } from 'next';
+import { Inter, Rajdhani } from 'next/font/google';
 import './globals.css';
+import { generateStructuredData } from './structured-data';
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const rajdhani = Rajdhani({ 
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-rajdhani',
+});
 
 export const metadata: Metadata = {
   title: 'Chanont Wankaew | Senior Telecom Data Analyst & AI Solutions Specialist',
@@ -19,6 +34,42 @@ export const metadata: Metadata = {
     icon: "/cw-icon.jpg",
     apple: "/cw-icon.jpg",
   },
+  openGraph: {
+    title: 'Chanont Wankaew | Senior Telecom Data Analyst & AI Solutions Specialist',
+    description: 'Portfolio of Chanont Wankaew - Senior Telecom Data Analyst & AI Solutions Specialist with 10+ years in RAN/RF Planning & Optimization (3G/4G/5G NR) and CEM Focus.',
+    url: 'https://chanont-portfolio.vercel.app',
+    siteName: 'Chanont Wankaew Portfolio',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Chanont Wankaew Portfolio - Telecom Data Analyst',
+      },
+    ],
+    locale: 'th_TH',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Chanont Wankaew | Senior Telecom Data Analyst & AI Solutions Specialist',
+    description: 'Portfolio of Chanont Wankaew - Senior Telecom Data Analyst & AI Solutions Specialist with 10+ years in RAN/RF Planning & Optimization (3G/4G/5G NR) and CEM Focus.',
+    images: ['/twitter-image.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
+  },
 };
 
 export default function RootLayout({
@@ -26,10 +77,31 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const structuredData = generateStructuredData();
+
   return (
     <html lang="th" className="dark scroll-smooth">
-      <body className="bg-[#05070B] text-slate-100 antialiased min-h-screen selection:bg-[#00F0FF]/30">
-        {children}
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData.person) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData.webSite) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData.organization) }}
+        />
+      </head>
+      <body className={`${inter.variable} ${rajdhani.variable} bg-[#05070B] text-slate-100 antialiased min-h-screen selection:bg-[#00F0FF]/30`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-[#00F0FF] text-black px-4 py-2 rounded-lg font-bold z-50">
+          Skip to main content
+        </a>
+        <div id="main-content" role="main">
+          {children}
+        </div>
       </body>
     </html>
   );
