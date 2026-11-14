@@ -20,6 +20,8 @@ import {
   FileDown,
   CheckCircle2,
   Languages,
+  Menu,
+  X,
 } from 'lucide-react';
 import * as THREE from 'three';
 
@@ -213,6 +215,20 @@ export default function App() {
   const [certFilter, setCertFilter] = useState<'all' | 'ai' | 'data'>('all');
   const [evFilter, setEvFilter] = useState<'all' | string>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  // Mobile Navigation Drawer State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // ป้องกันการ Scroll พื้นหลังเมื่อเปิดเมนู Drawer บนมือถือ
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   // Terminal CLI State
   const [terminalLogs, setTerminalLogs] = useState<
@@ -663,9 +679,132 @@ export default function App() {
               >
                 <span>CONTACT</span> ↗
               </a>
+
+              {/* Mobile Hamburger Button */}
+              <button
+                type="button"
+                aria-label={mobileMenuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
+                aria-expanded={mobileMenuOpen}
+                onClick={() => {
+                  playCyberSound('click');
+                  setMobileMenuOpen(!mobileMenuOpen);
+                }}
+                className="p-2.5 rounded-xl bg-white/5 border border-white/15 text-slate-300 hover:text-[#00F0FF] hover:border-[#00F0FF]/50 transition flex lg:hidden items-center justify-center"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5 text-[#00F0FF]" /> : <Menu className="w-5 h-5" />}
+              </button>
             </div>
           </div>
         </header>
+
+        {/* MOBILE NAVIGATION DRAWER & BACKDROP */}
+        <div
+          aria-hidden={!mobileMenuOpen}
+          className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${
+            mobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
+          }`}
+        >
+          {/* Backdrop Blur */}
+          <div
+            onClick={() => {
+              playCyberSound('click');
+              setMobileMenuOpen(false);
+            }}
+            className={`fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300 ${
+              mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+
+          {/* Slide-out Drawer Panel */}
+          <aside
+            aria-label="เมนูหลักบนมือถือ"
+            className={`fixed top-0 right-0 bottom-0 w-[84%] max-w-[340px] bg-[#0A0F1A]/95 border-l border-[#00F0FF]/30 backdrop-blur-2xl shadow-2xl flex flex-col justify-between p-6 transition-transform duration-300 ease-out transform ${
+              mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
+            {/* Drawer Header */}
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#00F0FF]/20 border border-[#00F0FF]/60 flex items-center justify-center text-[#00F0FF]">
+                    <Radio className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-display font-bold text-xs tracking-wide text-white">
+                      Chanont Wankaew
+                    </div>
+                    <div className="text-[10px] font-mono text-[#00FF88] flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#00FF88] animate-pulse" />
+                      PRO Navigation
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  aria-label="ปิดเมนู"
+                  onClick={() => {
+                    playCyberSound('click');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:border-[#00F0FF]/50 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="mt-6 flex flex-col gap-2 font-mono text-sm">
+                {[
+                  { label: 'Overview', href: '#top', num: '00' },
+                  { label: 'Capabilities', href: '#capabilities', num: '01' },
+                  { label: 'Evidence', href: '#evidence', num: '02' },
+                  { label: 'Experience', href: '#experience', num: '03' },
+                  { label: 'Development', href: '#development', num: '04' },
+                  { label: 'Credentials (11)', href: '#credentials', num: '05' },
+                  { label: 'Contact', href: '#contact', num: '06' },
+                ].map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => {
+                      playCyberSound('click');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-200 hover:text-[#00F0FF] hover:border-[#00F0FF]/40 hover:bg-[#00F0FF]/10 transition group"
+                  >
+                    <span className="font-medium group-hover:translate-x-1 transition-transform">
+                      {item.label}
+                    </span>
+                    <span className="text-[11px] text-[#718096] group-hover:text-[#00F0FF] font-semibold">
+                      {item.num} ↗
+                    </span>
+                  </a>
+                ))}
+              </nav>
+            </div>
+
+            {/* Drawer Footer & Fast Actions */}
+            <div className="pt-6 border-t border-white/10 space-y-3 font-mono text-xs">
+              <a
+                href="Chanont_Wankaew_Resume.pdf"
+                download
+                onClick={() => {
+                  playCyberSound('click');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-[#00F0FF]/15 border border-[#00F0FF]/40 text-[#00F0FF] font-bold flex items-center justify-center gap-2 hover:bg-[#00F0FF] hover:text-black transition"
+              >
+                <Download className="w-4 h-4" />
+                <span>ดาวน์โหลด CV / Resume</span>
+              </a>
+
+              <div className="text-[10px] text-[#718096] text-center">
+                Telecom Data Analytics & AI Specialist
+              </div>
+            </div>
+          </aside>
+        </div>
 
         {/* HERO SECTION */}
         <section id="top" className="relative min-h-screen pt-32 pb-20 px-4 sm:px-8 flex items-center justify-center">
