@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Rajdhani } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { generateStructuredData } from './structured-data';
 
@@ -7,13 +7,6 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
-});
-
-const rajdhani = Rajdhani({ 
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-rajdhani',
 });
 
 export const metadata: Metadata = {
@@ -80,8 +73,12 @@ export default function RootLayout({
   const structuredData = generateStructuredData();
 
   return (
-    <html lang="th" className="dark scroll-smooth">
+    <html lang="en" className="dark">
       <head>
+        {/* Markdown for Agents & LLM Discovery */}
+        <link rel="alternate" type="text/markdown" href="/index.md" />
+        <link rel="alternate" type="text/markdown" href="https://chanontwankaew.com/index.md" />
+        <link rel="author" type="text/plain" href="/llms.txt" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData.person) }}
@@ -95,7 +92,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData.organization) }}
         />
       </head>
-      <body className={`${inter.variable} ${rajdhani.variable} bg-[#05070B] text-slate-100 antialiased min-h-screen selection:bg-[#00F0FF]/30`}>
+      <body className={`${inter.variable} min-h-screen bg-black text-white antialiased`}>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-[#00F0FF] text-black px-4 py-2 rounded-lg font-bold z-50">
           Skip to main content
         </a>

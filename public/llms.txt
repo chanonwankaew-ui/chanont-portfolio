@@ -1,0 +1,7 @@
+# Chanont Wankaew
+> Senior Telecom Data Analyst & AI Solutions Specialist (CEM Focus)
+
+## Primary Documents
+- [Full Portfolio (Markdown)](https://chanontwankaew.com/index.md): Comprehensive portfolio covering 10+ years in RAN/RF optimization, 11 verified certifications, engineering evidence, and contact info.
+- [Security Disclosure](https://chanontwankaew.com/.well-known/security.txt): RFC 9116 security contact and vulnerability disclosure policy.
+- [Robots Policy](https://chanontwankaew.com/robots.txt): Crawler access rules and Content-Signal preferences.

@@ -1,0 +1,68 @@
+export const dynamic = 'force-static';
+export const contentType = 'text/plain';
+
+// ใช้ raw text response เพื่อรองรับ Content-Signal directives (IETF draft-romm-aipref-contentsignals)
+// ซึ่ง MetadataRoute.Robots ของ Next.js ยังไม่รองรับ
+export default function GET() {
+  const baseUrl = 'https://chanontwankaew.com';
+
+  const body = `# chanontwankaew.com – robots.txt
+# Content Signals: https://contentsignals.org/
+
+# ===== Search Engines (Allow crawling, no AI training) =====
+User-agent: Googlebot
+Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+User-agent: Bingbot
+Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+User-agent: Slurp
+Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+User-agent: DuckDuckBot
+Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+# ===== AI Dataset Crawlers (Block entirely) =====
+User-agent: GPTBot
+Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
+
+User-agent: CCBot
+Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
+
+User-agent: Bytespider
+Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
+
+User-agent: ClaudeBot
+Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
+
+User-agent: anthropic-ai
+Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
+
+User-agent: Diffbot
+Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
+
+# ===== Default policy =====
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+Sitemap: ${baseUrl}/sitemap.xml
+Host: ${baseUrl}
+`.trim();
+
+  return new Response(body, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+}

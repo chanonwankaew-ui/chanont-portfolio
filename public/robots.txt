@@ -1,35 +1,46 @@
 # Allow standard search engine web crawlers
 User-agent: Googlebot
 Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
 
 User-agent: Bingbot
 Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
 
 User-agent: Slurp
 Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
 
 User-agent: DuckDuckBot
 Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no
 
 # Restrict aggressive AI scrapers and dataset crawlers
 User-agent: GPTBot
 Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
 
 User-agent: CCBot
 Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
 
 User-agent: Bytespider
 Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
 
 User-agent: ClaudeBot
 Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
 
 User-agent: anthropic-ai
 Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
 
 User-agent: Diffbot
 Disallow: /
+Content-Signal: ai-train=no, search=no, ai-input=no
 
-# Default policy
+# Default policy - allow search, disallow AI training and AI input scraping
 User-agent: *
 Allow: /
+Content-Signal: ai-train=no, search=yes, ai-input=no

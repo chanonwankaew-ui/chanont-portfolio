@@ -16,11 +16,13 @@ export const usePerformanceMonitor = () => {
   });
 
   const frameCountRef = useRef(0);
-  const lastTimeRef = useRef(performance.now());
+  const lastTimeRef = useRef(0);
   const fpsIntervalRef = useRef(1000);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
+    lastTimeRef.current = performance.now();
+
     const measurePerformance = () => {
       const now = performance.now();
       frameCountRef.current++;
@@ -30,8 +32,11 @@ export const usePerformanceMonitor = () => {
         
         // Memory usage (if available)
         let memoryUsage = 0;
-        if ('memory' in performance && (performance as any).memory) {
-          memoryUsage = Math.round((performance as any).memory.usedJSHeapSize / 1048576);
+        const memory = (performance as Performance & {
+          memory?: { usedJSHeapSize: number };
+        }).memory;
+        if (memory) {
+          memoryUsage = Math.round(memory.usedJSHeapSize / 1048576);
         }
 
         // Render time estimation

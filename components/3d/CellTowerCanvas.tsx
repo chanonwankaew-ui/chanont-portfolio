@@ -1,141 +1,283 @@
 'use client';
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Ring, Line, Sphere, Trail } from '@react-three/drei';
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 
-// Global state for cursor interaction
-const cursorState = {
-  position: new THREE.Vector3(0, 0, 0),
-  screenPosition: new THREE.Vector2(0, 0),
-  isClicking: false,
-  clickTime: 0
+const TOWER_POSITION = new THREE.Vector3(6, -10, -4);
+const ANTENNA_POSITION = new THREE.Vector3(6, 11.5, -4);
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 10);
+const pointerNdc = new THREE.Vector2(0, 0);
+
+type BarSpec = {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  radius: number;
 };
 
-// Check for reduced motion preference
-const prefersReducedMotion = () => {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-};
+function createTowerBars(): BarSpec[] {
+  const bars: BarSpec[] = [];
+  const levels = 9;
+  const baseWidth = 1.45;
+  const topWidth = 0.38;
+  const height = 21.5;
 
-// Enhanced 5G Cell Tower with realistic details
-function CellTower() {
-  const towerRef = useRef<THREE.Group>(null);
-  const beaconRef = useRef<THREE.Mesh>(null);
+  const cornersAt = (fraction: number) => {
+    const halfWidth = THREE.MathUtils.lerp(baseWidth, topWidth, fraction) / 2;
+    const y = fraction * height;
+    return [
+      new THREE.Vector3(-halfWidth, y, -halfWidth),
+      new THREE.Vector3(halfWidth, y, -halfWidth),
+      new THREE.Vector3(halfWidth, y, halfWidth),
+      new THREE.Vector3(-halfWidth, y, halfWidth),
+    ];
+  };
+
+  const addBar = (start: THREE.Vector3, end: THREE.Vector3, radius = 0.035) => {
+    bars.push({ start, end, radius });
+  };
+
+  const lower = cornersAt(0);
+  const upper = cornersAt(1);
+  lower.forEach((corner, index) => addBar(corner, upper[index], 0.07));
+
+  for (let level = 0; level <= levels; level += 1) {
+    const corners = cornersAt(level / levels);
+    corners.forEach((corner, index) => addBar(corner, corners[(index + 1) % corners.length], 0.045));
+  }
+
+  for (let level = 0; level < levels; level += 1) {
+    const low = cornersAt(level / levels);
+    const high = cornersAt((level + 1) / levels);
+    for (let face = 0; face < 4; face += 1) {
+      const next = (face + 1) % 4;
+      addBar(low[face], high[next]);
+      addBar(low[next], high[face]);
+    }
+  }
+
+  return bars;
+}
+
+function TowerBar({ start, end, radius }: BarSpec) {
+  const direction = useMemo(() => end.clone().sub(start), [end, start]);
+  const rotation = useMemo(
+    () => new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction.clone().normalize(),
+    ),
+    [direction],
+  );
+  const midpoint = useMemo(() => start.clone().add(end).multiplyScalar(0.5), [end, start]);
+
+  return (
+    <mesh position={midpoint} quaternion={rotation} scale={[1, direction.length(), 1]}>
+      <cylinderGeometry args={[radius, radius, 1, 6]} />
+      <meshStandardMaterial color={0x88919a} metalness={0.15} roughness={0.75} />
+    </mesh>
+  );
+}
+
+function TowerFrame() {
+  const bars = useMemo(() => createTowerBars(), []);
+
+  return (
+    <group position={TOWER_POSITION}>
+      {bars.map((bar, index) => <TowerBar key={index} {...bar} />)}
+      <mesh position={[0, 0.18, 0]}>
+        <cylinderGeometry args={[1.15, 1.35, 0.36, 8]} />
+        <meshStandardMaterial color={0x707982} metalness={0.15} roughness={0.78} />
+      </mesh>
+      {[0, 120, 240].map((degrees) => {
+        const angle = THREE.MathUtils.degToRad(degrees);
+        return (
+          <group
+            key={degrees}
+            position={[Math.sin(angle) * 0.62, 21.5, Math.cos(angle) * 0.62]}
+            rotation={[0, -angle, 0]}
+          >
+            <mesh>
+              <boxGeometry args={[0.38, 2.2, 0.18]} />
+              <meshStandardMaterial color={0xa2abb3} metalness={0.12} roughness={0.72} />
+            </mesh>
+            <mesh position={[0, -1.25, 0]}>
+              <boxGeometry args={[0.15, 0.35, 0.15]} />
+              <meshStandardMaterial color={0x707982} metalness={0.15} roughness={0.75} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+function SignalRings() {
+  const ringRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const auraRef = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
-    if (!towerRef.current) return;
-    // Subtle tower sway
-    towerRef.current.rotation.y = -Math.PI / 6 + Math.sin(clock.getElapsedTime() * 0.3) * 0.04;
-    
-    // Blinking aviation light
-    if (beaconRef.current) {
-      const blink = Math.sin(clock.getElapsedTime() * 3) > 0;
-      beaconRef.current.material.opacity = blink ? 1 : 0.2;
+    const time = clock.getElapsedTime();
+    ringRefs.current.forEach((ring, index) => {
+      if (!ring) return;
+      const progress = (time * 0.2 + index / 4) % 1;
+      ring.position.y = 21.5 - progress * 21.5;
+      ring.scale.setScalar(0.75 + progress * 0.65);
+      const material = ring.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.12 * (1 - progress);
+    });
+
+    if (auraRef.current) {
+      const progress = (time * 0.2) % 1;
+      auraRef.current.scale.setScalar(0.9 + progress * 5);
+      (auraRef.current.material as THREE.MeshBasicMaterial).opacity =
+        Math.sin(progress * Math.PI) * 0.12;
     }
   });
 
   return (
-    <group ref={towerRef} position={[8.5, -6.5, -5]}>
-      {/* Main tower structure - more realistic lattice */}
-      <mesh position={[0, 4, 0]}>
-        <cylinderGeometry args={[0.12, 0.35, 13, 8]} />
-        <meshStandardMaterial color="#26394A" metalness={0.7} roughness={0.35} wireframe />
-      </mesh>
-
-      {/* Massive MIMO AAU Panels - 3 directions with more detail */}
-      {[0, 120, 240].map((angle) => {
-        const rad = THREE.MathUtils.degToRad(angle);
-        return (
-          <group key={angle} position={[Math.sin(rad) * 0.8, 10.5, Math.cos(rad) * 0.8]} rotation={[0, -rad, 0]}>
-            {/* Main AAU panel */}
-            <mesh>
-              <boxGeometry args={[0.35, 2.4, 0.16]} />
-              <meshStandardMaterial color="#00F0FF" emissive="#00F0FF" emissiveIntensity={0.95} />
-            </mesh>
-            {/* AAU detail lines */}
-            {[0.2, 0, -0.2].map((y, i) => (
-              <mesh key={i} position={[0, y, 0.09]}>
-                <boxGeometry args={[0.3, 0.02, 0.01]} />
-                <meshStandardMaterial color="#003344" />
-              </mesh>
-            ))}
-          </group>
-        );
-      })}
-
-      {/* Microwave Backhaul Dish */}
-      <mesh position={[1.2, 8, 0]} rotation={[0, Math.PI / 4, Math.PI / 6]}>
-        <paraboloidGeometry args={[0.4, 0.15, 32]} />
-        <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
-      </mesh>
-      <mesh position={[1.35, 8, 0.1]} rotation={[0, Math.PI / 4, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 0.2, 8]} />
-        <meshStandardMaterial color="#808080" />
-      </mesh>
-
-      {/* Aviation Warning Light - blinking */}
-      <mesh ref={beaconRef} position={[0, 12, 0]}>
-        <sphereGeometry args={[0.22, 16, 16]} />
-        <meshBasicMaterial color="#FF007A" transparent opacity={1} />
-      </mesh>
-      
-      {/* Base platform */}
-      <mesh position={[0, -2.6, 0]}>
-        <cylinderGeometry args={[1.4, 1.8, 0.5, 8]} />
-        <meshStandardMaterial color="#111820" metalness={0.5} roughness={0.5} />
+    <group position={TOWER_POSITION}>
+      {Array.from({ length: 4 }, (_, index) => (
+        <mesh
+          key={index}
+          ref={(element) => { ringRefs.current[index] = element; }}
+          position={[0, 21.5, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <torusGeometry args={[1.05, 0.025, 6, 64]} />
+          <meshBasicMaterial
+            color={0xc6edf2}
+            transparent
+            opacity={0.12}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+      <mesh
+        ref={auraRef}
+        position={[0, 0.04, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <ringGeometry args={[0.8, 0.92, 64]} />
+        <meshBasicMaterial
+          color={0xd8f8fb}
+          transparent
+          opacity={0.1}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
       </mesh>
     </group>
   );
 }
 
-// Orbiting 3D Data Orbs
-function DataOrbs() {
+function BeamformingLobe() {
   const groupRef = useRef<THREE.Group>(null);
-  const orbsRef = useRef<THREE.Mesh[]>([]);
+  const lobeRef = useRef<THREE.Mesh>(null);
+  const raycaster = useThree((state) => state.raycaster);
+  const camera = useThree((state) => state.camera);
+  const target = useMemo(() => new THREE.Vector3(), []);
+  const geometry = useMemo(
+    () => new THREE.CylinderGeometry(1.5, 0.1, 1, 32, 1, true).rotateX(Math.PI / 2),
+    [],
+  );
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  useFrame(() => {
+    raycaster.setFromCamera(pointerNdc, camera);
+    if (!raycaster.ray.intersectPlane(groundPlane, target) || !groupRef.current || !lobeRef.current) return;
+
+    groupRef.current.lookAt(target);
+    const distance = ANTENNA_POSITION.distanceTo(target);
+    const focus = THREE.MathUtils.clamp(5.5 / distance, 0.2, 0.65);
+    lobeRef.current.scale.set(focus, focus, distance);
+    lobeRef.current.position.z = distance / 2;
+  });
+
+  return (
+    <group ref={groupRef} position={ANTENNA_POSITION}>
+      <mesh ref={lobeRef} geometry={geometry}>
+        <meshBasicMaterial
+          color={0xa8e5eb}
+          transparent
+          opacity={0.08}
+          blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function DataNodes() {
+  const nodeRefs = useRef<Array<THREE.Mesh | null>>([]);
+  const raycaster = useThree((state) => state.raycaster);
+  const camera = useThree((state) => state.camera);
+  const cursor = useMemo(() => new THREE.Vector3(), []);
+  const nodeData = useMemo(
+    () => Array.from({ length: 6 }, (_, index) => ({
+      angle: (index / 6) * Math.PI * 2,
+      radius: 2.3 + (index % 2) * 0.65,
+      height: 12 + Math.sin(index * 2.1) * 5,
+      phase: index * 1.3,
+    })),
+    [],
+  );
 
   useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
-    
-    // Orbital animation
-    groupRef.current.children.forEach((orb, i) => {
-      const angle = t * 0.5 + (i * Math.PI * 2) / 6;
-      const radius = 3 + Math.sin(t + i) * 0.5;
-      orb.position.x = Math.cos(angle) * radius;
-      orb.position.z = Math.sin(angle) * radius;
-      orb.position.y = 8 + Math.sin(t * 2 + i) * 1.5;
-      
-      // Signal response when cursor is near
-      const orbMesh = orb as THREE.Mesh;
-      const distance = cursorState.position.distanceTo(orbMesh.position);
-      if (distance < 5) {
-        orbMesh.material.emissiveIntensity = 2 + (5 - distance) * 0.5;
-      } else {
-        orbMesh.material.emissiveIntensity = 0.5;
+    raycaster.setFromCamera(pointerNdc, camera);
+    if (!raycaster.ray.intersectPlane(groundPlane, cursor)) return;
+
+    const localCursorX = cursor.x - TOWER_POSITION.x;
+    const localCursorZ = cursor.z - TOWER_POSITION.z;
+    const time = clock.getElapsedTime();
+
+    nodeData.forEach((node, index) => {
+      const mesh = nodeRefs.current[index];
+      if (!mesh) return;
+      const angle = node.angle + Math.sin(time * 0.18 + node.phase) * 0.12;
+      const target = new THREE.Vector3(
+        Math.cos(angle) * node.radius,
+        node.height + Math.sin(time * 0.55 + node.phase) * 0.28,
+        Math.sin(angle) * node.radius,
+      );
+      const dx = target.x - localCursorX;
+      const dz = target.z - localCursorZ;
+      const horizontalDistance = Math.hypot(dx, dz);
+
+      if (horizontalDistance < 3.2) {
+        const strength = (1 - horizontalDistance / 3.2) * 1.5;
+        const safeDistance = Math.max(horizontalDistance, 0.01);
+        target.x += (dx / safeDistance) * strength;
+        target.z += (dz / safeDistance) * strength;
       }
+
+      mesh.position.lerp(target, 0.035);
     });
   });
 
-  const orbColors = ['#00F0FF', '#00FF88', '#8B5CF6', '#FF007A', '#FFAA00', '#00DDFF'];
-
   return (
-    <group ref={groupRef} position={[8.5, -6.5, -5]}>
-      {orbColors.map((color, i) => (
+    <group position={TOWER_POSITION}>
+      {nodeData.map((node, index) => (
         <mesh
-          key={i}
-          ref={(el) => { if (el) orbsRef.current[i] = el; }}
-          position={[3, 8, 0]}
+          key={index}
+          ref={(element) => { nodeRefs.current[index] = element; }}
+          position={[
+            Math.cos(node.angle) * node.radius,
+            node.height,
+            Math.sin(node.angle) * node.radius,
+          ]}
         >
-          <sphereGeometry args={[0.15, 16, 16]} />
-          <meshStandardMaterial 
-            color={color} 
-            emissive={color} 
-            emissiveIntensity={0.5}
+          <sphereGeometry args={[0.14, 20, 20]} />
+          <meshStandardMaterial
+            color={0xd9e1e6}
+            metalness={0.08}
+            roughness={0.32}
             transparent
-            opacity={0.9}
+            opacity={0.72}
           />
         </mesh>
       ))}
@@ -143,320 +285,49 @@ function DataOrbs() {
   );
 }
 
-// RF Grid Mesh with Cursor Ripple Displacement
-function RFGridMesh() {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const originalPositions = useRef<Float32Array>();
-
+function Scene() {
   useEffect(() => {
-    if (meshRef.current) {
-      const geometry = meshRef.current.geometry;
-      originalPositions.current = geometry.attributes.position.array.slice();
-    }
+    const handlePointerMove = (event: PointerEvent) => {
+      pointerNdc.set(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1,
+      );
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    return () => window.removeEventListener('pointermove', handlePointerMove);
   }, []);
 
-  useFrame(({ clock }) => {
-    if (!meshRef.current || !originalPositions.current) return;
-    
-    const positions = meshRef.current.geometry.attributes.position.array;
-    const original = originalPositions.current;
-    const time = clock.getElapsedTime();
-    
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = original[i];
-      const y = original[i + 1];
-      const z = original[i + 2];
-      
-      // Base wave animation
-      const baseWave = Math.sin(x * 0.5 + time) * 0.2 + Math.cos(y * 0.3 + time * 0.8) * 0.15;
-      
-      // Cursor ripple effect
-      const worldPos = new THREE.Vector3(x, y, z);
-      const distance = cursorState.position.distanceTo(worldPos);
-      const ripple = distance < 8 ? Math.sin(distance * 2 - time * 5) * Math.exp(-distance * 0.3) * 0.5 : 0;
-      
-      positions[i + 2] = original[i + 2] + baseWave + ripple;
-    }
-    
-    meshRef.current.geometry.attributes.position.needsUpdate = true;
+  useFrame(({ camera }) => {
+    const desiredX = pointerNdc.x * 0.7;
+    const desiredY = 1.4 - pointerNdc.y * 0.35;
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, desiredX, 0.018);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, desiredY, 0.018);
+    camera.lookAt(0, 0, 0);
   });
 
   return (
-    <mesh ref={meshRef} rotation={[Math.PI / 2, 0, 0]} position={[0, -10, 0]}>
-      <planeGeometry args={[40, 40, 50, 50]} />
-      <meshStandardMaterial 
-        color="#00F0FF" 
-        wireframe 
-        transparent 
-        opacity={0.15}
-        emissive="#00F0FF"
-        emissiveIntensity={0.3}
-      />
-    </mesh>
-  );
-}
-
-// Real-time Cursor 3D Signal Emitter
-function CursorSignalEmitter() {
-  const groupRef = useRef<THREE.Group>(null);
-  const phases = useMemo(() => [0, 0.2, 0.4, 0.6], []);
-
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
-    
-    // Update position based on cursor
-    groupRef.current.position.copy(cursorState.position);
-    
-    // Animate signal rings
-    groupRef.current.children.forEach((child, i) => {
-      const mesh = child as THREE.Mesh;
-      const progress = (t * 0.5 + phases[i]) % 1;
-      const scale = 0.5 + progress * 8;
-      mesh.scale.setScalar(scale);
-      if (mesh.material && 'opacity' in mesh.material) {
-        (mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.8 * (1 - progress));
-      }
-    });
-  });
-
-  return (
-    <group ref={groupRef}>
-      {phases.map((_, i) => (
-        <Ring key={i} args={[0.5, 0.6, 64]} rotation={[Math.PI / 2, 0, 0]}>
-          <meshBasicMaterial 
-            color={i % 2 === 0 ? "#00F0FF" : "#00FF88"} 
-            transparent 
-            opacity={0.8} 
-            side={THREE.DoubleSide} 
-          />
-        </Ring>
-      ))}
-    </group>
-  );
-}
-
-// Cursor Beamforming Laser
-function BeamformingLaser() {
-  const lineRef = useRef<THREE.Line>(null);
-  const towerPosition = useMemo(() => new THREE.Vector3(8.5, 4, -5), []);
-
-  useFrame(() => {
-    if (!lineRef.current) return;
-    
-    const positions = lineRef.current.geometry.attributes.position.array;
-    
-    // Start from cursor
-    positions[0] = cursorState.position.x;
-    positions[1] = cursorState.position.y;
-    positions[2] = cursorState.position.z;
-    
-    // End at tower
-    positions[3] = towerPosition.x;
-    positions[4] = towerPosition.y;
-    positions[5] = towerPosition.z;
-    
-    lineRef.current.geometry.attributes.position.needsUpdate = true;
-  });
-
-  return (
-    <line ref={lineRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={2}
-          array={new Float32Array([0, 0, 0, 0, 0, 0])}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <lineBasicMaterial color="#00F0FF" transparent opacity={0.6} linewidth={2} />
-    </line>
-  );
-}
-
-// 5G Burst Click Effect
-function ClickBurstEffect() {
-  const groupRef = useRef<THREE.Group>(null);
-  const [active, setActive] = useState(false);
-  const startTime = useRef(0);
-
-  useEffect(() => {
-    const handleClick = () => {
-      setActive(true);
-      startTime.current = performance.now();
-      cursorState.isClicking = true;
-      cursorState.clickTime = performance.now();
-    };
-    
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, []);
-
-  useFrame(() => {
-    if (!groupRef.current) return;
-    
-    if (active) {
-      const elapsed = (performance.now() - startTime.current) / 1000;
-      if (elapsed > 1) {
-        setActive(false);
-        cursorState.isClicking = false;
-      }
-      
-      groupRef.current.position.copy(cursorState.position);
-      groupRef.current.children.forEach((child) => {
-        const mesh = child as THREE.Mesh;
-        const scale = elapsed * 15;
-        mesh.scale.setScalar(scale);
-        if (mesh.material && 'opacity' in mesh.material) {
-          (mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - elapsed);
-        }
-      });
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {active && (
-        <>
-          <Sphere args={[0.5, 32, 32]}>
-            <meshBasicMaterial color="#FF007A" transparent opacity={1} />
-          </Sphere>
-          {[0, 60, 120].map((angle, i) => (
-            <Ring key={i} args={[0.8, 1, 64]} rotation={[Math.PI / 2, angle * Math.PI / 180, 0]}>
-              <meshBasicMaterial color="#00F0FF" transparent opacity={1} />
-            </Ring>
-          ))}
-        </>
-      )}
-    </group>
-  );
-}
-
-// 360° Free Camera Orbit System
-function CameraOrbit() {
-  const { camera, gl } = useThree();
-  const isDragging = useRef(false);
-  const previousMousePosition = useRef({ x: 0, y: 0 });
-  const spherical = useRef(new THREE.Spherical(24, Math.PI / 3, 0));
-  const target = useRef(new THREE.Vector3(8.5, 0, -5));
-
-  useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      isDragging.current = true;
-      previousMousePosition.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      // Update cursor state for all effects
-      const x = (e.clientX / window.innerWidth) * 2 - 1;
-      const y = -(e.clientY / window.innerHeight) * 2 + 1;
-      cursorState.screenPosition.set(x, y);
-      
-      // Unproject to 3D world space
-      const vector = new THREE.Vector3(x, y, 0.5);
-      vector.unproject(camera);
-      const dir = vector.sub(camera.position).normalize();
-      const distance = -camera.position.z / dir.z;
-      const pos = camera.position.clone().add(dir.multiplyScalar(distance));
-      cursorState.position.copy(pos);
-
-      if (!isDragging.current) return;
-
-      const deltaX = e.clientX - previousMousePosition.current.x;
-      const deltaY = e.clientY - previousMousePosition.current.y;
-
-      spherical.current.theta -= deltaX * 0.005;
-      spherical.current.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.current.phi + deltaY * 0.005));
-
-      spherical.current.makeUnsafe();
-      camera.position.setFromSpherical(spherical.current).add(target.current);
-      camera.lookAt(target.current);
-
-      previousMousePosition.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseUp = () => {
-      isDragging.current = false;
-    };
-
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    
-    return () => {
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [camera]);
-
-  return null;
-}
-
-// Original Signal Waves (upgraded)
-function SignalWaves() {
-  const groupRef = useRef<THREE.Group>(null);
-  const phases = useMemo(() => [0, 0.15, 0.3, 0.45, 0.6, 0.75], []);
-
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
-    groupRef.current.children.forEach((child, i) => {
-      const mesh = child as THREE.Mesh;
-      const progress = (t * 0.34 + phases[i]) % 1;
-      const scale = 0.4 + progress * 10;
-      mesh.scale.setScalar(scale);
-      if (mesh.material && 'opacity' in mesh.material) {
-        (mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.72 * (1 - progress));
-      }
-    });
-  });
-
-  return (
-    <group ref={groupRef} position={[8.5, 4, -5]} rotation={[Math.PI / 2.4, 0, 0]}>
-      {phases.map((_, i) => (
-        <Ring key={i} args={[0.95, 1.02, 96]}>
-          <meshBasicMaterial color={i % 2 === 0 ? "#00F0FF" : "#00FF88"} transparent opacity={0.8} side={THREE.DoubleSide} />
-        </Ring>
-      ))}
-    </group>
+    <>
+      <hemisphereLight args={[0xe8edf2, 0x242930, 1.35]} />
+      <directionalLight position={[-8, 14, 10]} intensity={2.2} />
+      <directionalLight position={[8, 4, -8]} intensity={0.6} color={0xc7d4df} />
+      <TowerFrame />
+      <SignalRings />
+      <BeamformingLobe />
+      <DataNodes />
+    </>
   );
 }
 
 export default function CellTowerCanvas() {
-  const { metrics, checkDeviceCapabilities } = usePerformanceMonitor();
-  const { isMobile, shouldReduceEffects } = checkDeviceCapabilities();
-  const reducedMotion = prefersReducedMotion();
-
-  // Adjust quality based on device capabilities
-  const pixelRatio = shouldReduceEffects ? 1 : Math.min(window.devicePixelRatio, 2);
-  const antialias = !shouldReduceEffects;
-  const powerPreference = shouldReduceEffects ? 'low-power' : 'high-performance';
-
   return (
-    <div className="pointer-events-auto fixed inset-0 z-0" aria-hidden="true">
-      <Canvas
-        camera={{ position: [0, 2, 24], fov: 55 }}
-        dpr={[1, pixelRatio]}
-        gl={{ antialias, alpha: true, powerPreference }}
-      >
-        <ambientLight color="#172033" intensity={1.4} />
-        <directionalLight color="#00F0FF" intensity={1.3} position={[-8, 12, 10]} />
-        <pointLight color="#FF007A" intensity={2.5} distance={70} position={[11, 9, 5]} />
-        
-        <CameraOrbit />
-        <RFGridMesh />
-        <CellTower />
-        <DataOrbs />
-        <SignalWaves />
-        {!reducedMotion && !shouldReduceEffects && (
-          <>
-            <CursorSignalEmitter />
-            <BeamformingLaser />
-            <ClickBurstEffect />
-          </>
-        )}
-      </Canvas>
-    </div>
+    <Canvas
+      camera={{ position: [0, 1.4, 29], fov: 42, near: 0.1, far: 100 }}
+      dpr={[1, 1.5]}
+      gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+      performance={{ min: 0.6 }}
+    >
+      <Scene />
+    </Canvas>
   );
 }
